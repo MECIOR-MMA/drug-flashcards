@@ -13,6 +13,67 @@
 - 🌙 **深色模式** — 护眼暗色主题
 - 📱 **PWA** — 可添加到手机主屏幕，离线使用
 
+---
+
+## 🚀 部署到 GitHub Pages（iPhone 使用）
+
+### 第一步：安装 Git
+
+1. 去 https://git-scm.com/download/win 下载 Git for Windows
+2. 安装时一路默认选项即可
+3. 安装完成后，在项目文件夹右键 → "Git Bash Here"
+
+### 第二步：创建 GitHub 仓库
+
+1. 打开 https://github.com 注册/登录账号
+2. 点击右上角 **+** → **New repository**
+3. Repository name 填写：`drug-flashcards`（或任意名字）
+4. 选择 **Public**（公开）
+5. **不要**勾选 "Add a README file"
+6. 点击 **Create repository**
+
+### 第三步：推送代码
+
+在项目文件夹中打开 Git Bash（或终端），逐行执行：
+
+```bash
+# 初始化 git
+git init
+
+# 添加所有文件
+git add .
+
+# 提交
+git commit -m "药物结构背诵应用 v1.0"
+
+# 关联远程仓库（替换成你的用户名和仓库名）
+git remote add origin https://github.com/你的用户名/drug-flashcards.git
+
+# 推送
+git branch -M main
+git push -u origin main
+```
+
+### 第四步：开启 GitHub Pages
+
+1. 刷新你的 GitHub 仓库页面
+2. 点击 **Settings** → 左侧 **Pages**
+3. **Branch** 选择 `main`，点击 **Save**
+4. 等待 1-2 分钟，页面会显示：
+   > Your site is published at `https://你的用户名.github.io/drug-flashcards/`
+
+### 第五步：在 iPhone 上使用
+
+1. 用 Safari 打开 `https://你的用户名.github.io/drug-flashcards/`
+2. 点击底部的 **分享按钮**（方框+箭头图标）
+3. 向下滚动，点击 **添加到主屏幕**
+4. 名称改为"药物背诵"，点击 **添加**
+5. 桌面会出现 💊 图标，点击即可像 App 一样使用！
+
+> 🔄 **更新数据**：在手机上学习后，回到电脑 → 手机导出 JSON → 发送到电脑 → 电脑导入。或者反过来。
+
+---
+
 ## 💻 本地使用
 
 ### 桌面端
