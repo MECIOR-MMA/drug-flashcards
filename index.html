@@ -637,6 +637,15 @@ async function renderDashboard(){
     <div class="progress-bar"><div class="fill" style="width:${activeDrugs.length?Math.round(graduated.length/activeDrugs.length*100):0}%;background:var(--success)"></div></div>
   </div>
 
+  <!-- Mode selector -->
+  <div class="card">
+    <div class="card-header"><span class="dot"></span>选择背诵模式</div>
+    <div class="mode-toggle" id="dashboardMode">
+      <button class="${studyDirection==='i2n'?'active':''}" onclick="setMode('i2n')">🔬 → 📝 看图识名</button>
+      <button class="${studyDirection==='n2i'?'active':''}" onclick="setMode('n2i')">📝 → 🔬 看名识图</button>
+    </div>
+  </div>
+
   <button class="btn btn-primary" onclick="startNewLearning()" style="margin-bottom:10px">
     📖 学习新卡片 (今日${todayLogs.filter(l=>l.isNew).length||0}/10)
   </button>
@@ -647,6 +656,17 @@ async function renderDashboard(){
     🔍 快速浏览全部结构
   </button>
   </div>`;
+}
+
+function setMode(mode){
+  studyDirection=mode;
+  const btns=document.querySelectorAll('#dashboardMode button');
+  btns.forEach(b=>{
+    b.classList.remove('active');
+    if((mode==='i2n'&&b.textContent.includes('看图识名'))||(mode==='n2i'&&b.textContent.includes('看名识图'))){
+      b.classList.add('active');
+    }
+  });
 }
 
 async function calcStreak(){
