@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#0d9488">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%231a73e8' width='192' height='192' rx='32'/><text x='96' y='120' text-anchor='middle' fill='white' font-size='80' font-family='sans-serif'>💊</text></svg>">
+<title>药物结构背诵</title>
+<style>
+:root {
+  --bg: #f2f7f5; --surface: #fff; --text: #1a2e2b; --text2: #6b7f7a;
+  --primary: #0d9488; --primary-dark: #0f766e; --primary-light: #e6f7f5;
+  --accent: #6366f1; --accent-light: #eef2ff;
+  --danger: #ef4444; --danger-light: #fef2f2;
+  --success: #10b981; --success-light: #ecfdf5;
+  --warn: #f59e0b; --warn-light: #fffbeb;
+  --border: #e4ece9; --radius: 16px; --radius-sm: 10px;
+  --nav-h: 68px; --font: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',system-ui,sans-serif;
+}
+body.dark {
+  --bg: #0c1a17; --surface: #152522; --text: #e2edeb; --text2: #7a918c;
+  --primary: #2dd4bf; --primary-dark: #14b8a6; --primary-light: #0d2e28;
+  --border: #1e3d35;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { height:100%; overflow:hidden; }
+body {
+  font-family:var(--font); background:var(--bg); color:var(--text);
+  display:flex; flex-direction:column; -webkit-tap-highlight-color:transparent;
+  user-select:none; -webkit-user-select:none; font-size:15px; line-height:1.5;
+}
+#app { flex:1; overflow-y:auto; padding:12px 14px calc(var(--nav-h) + 24px); scroll-behavior:smooth; }
+.view { display:none; }
+.view.active { display:block; animation:fadeUp .25s cubic-bezier(.4,0,.2,1); }
+@keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+@keyframes popIn { 0%{transform:scale(.9);opacity:0} 100%{transform:scale(1);opacity:1} }
+@keyframes flipIn { 0%{transform:rotateY(90deg);opacity:0} 100%{transform:rotateY(0);opacity:1} }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+/* Nav */
+nav {
+  position:fixed; bottom:0; left:0; right:0; height:var(--nav-h);
+  background:var(--surface); border-top:1px solid var(--border);
+  display:flex; justify-content:space-around; align-items:flex-start;
+  z-index:100; padding:6px 4px env(safe-area-inset-bottom,6px);
+}
+nav .tab {
+  display:flex; flex-direction:column; align-items:center; gap:3px;
+  padding:6px 10px; border:none; background:none; color:var(--text2);
+  font-size:10px; cursor:pointer; font-family:var(--font); position:relative;
+  transition:all .2s; font-weight:500; border-radius:12px; min-width:56px;
+}
+nav .tab .icon { font-size:22px; line-height:1; transition:transform .2s; }
+nav .tab.active { color:var(--primary); }
+nav .tab.active .icon { transform:translateY(-2px); }
+nav .tab .badge {
+  position:absolute; top:2px; left:50%; margin-left:10px;
+  background:var(--danger); color:#fff; font-size:10px; min-width:18px;height:18px;
+  border-radius:9px; display:flex; align-items:center; justify-content:center;
+  font-weight:700; padding:0 5px; animation:popIn .3s;
+}
+
+/* Cards */
+.card {
+  background:var(--surface); border-radius:var(--radius); padding:18px;
+  border:1px solid var(--border); margin-bottom:14px;
+  transition:border-color .2s;
+}
+.card-header { font-size:15px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+.card-header .dot { width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0; }
+
+/* Stats */
+.stats-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px; }
+.stat-card {
+  background:var(--surface); border-radius:var(--radius-sm); padding:16px 10px;
+  text-align:center; border:1px solid var(--border);
+}
+.stat-card .num { font-size:30px; font-weight:800; letter-spacing:-1px; }
+.stat-card .label { font-size:11px; color:var(--text2); margin-top:3px; font-weight:500; }
+.stat-card.primary .num{color:var(--primary)}
+.stat-card.success .num{color:var(--success)}
+.stat-card.danger .num{color:var(--danger)}
+.stat-card.warn .num{color:var(--warn)}
+
+/* Buttons */
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  padding:14px 20px; border-radius:var(--radius-sm); border:none;
+  font-size:15px; font-weight:600; cursor:pointer; transition:all .18s;
+  font-family:var(--font); width:100%; position:relative; overflow:hidden;
+}
+.btn:active { transform:scale(.97); }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:active { background:var(--primary-dark); }
+.btn-surface { background:var(--surface); color:var(--text); border:1.5px solid var(--border); }
+.btn-accent { background:var(--accent); color:#fff; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-sm { padding:8px 16px; font-size:13px; width:auto; }
+.btn-row { display:flex; gap:10px; }
+.btn-row .btn { flex:1; }
+
+/* Mode selector */
+.mode-toggle {
+  display:flex; background:var(--bg); border-radius:var(--radius-sm); padding:4px; gap:4px;
+}
+.mode-toggle button {
+  flex:1; padding:12px 8px; border:none; border-radius:8px; font-size:14px;
+  font-weight:600; cursor:pointer; transition:all .2s; font-family:var(--font);
+  background:transparent; color:var(--text2);
+}
+.mode-toggle button.active { background:var(--surface); color:var(--text); }
+
+/* Flashcard */
+.flashcard-container {
+  display:flex; flex-direction:column; align-items:center; gap:16px;
+}
+.flashcard {
+  background:var(--surface); border-radius:var(--radius); border:1.5px solid var(--border);
+  width:100%; max-width:420px; min-height:280px; display:flex;
+  align-items:center; justify-content:center; cursor:pointer;
+  position:relative; overflow:hidden; transition:all .2s;
+}
+.flashcard:active { border-color:var(--primary); }
+.flashcard img { max-width:100%; max-height:300px; object-fit:contain; padding:12px; }
+.flashcard .drug-name {
+  font-size:36px; font-weight:800; text-align:center; padding:20px;
+  animation:flipIn .35s; letter-spacing:2px;
+}
+.flashcard .reveal-hint {
+  position:absolute; bottom:10px; right:14px;
+  font-size:11px; color:var(--text2); opacity:.5; font-weight:500;
+}
+
+.answer-area {
+  width:100%; max-width:420px; min-height:64px;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--primary-light); border-radius:var(--radius-sm);
+  border:2px dashed var(--primary); font-size:14px; color:var(--text2);
+  cursor:pointer; transition:all .25s; padding:18px; font-weight:500;
+}
+.answer-area.revealed {
+  border-style:solid; border-color:var(--success); background:var(--success-light);
+  color:var(--text); font-size:30px; font-weight:800; animation:popIn .3s;
+}
+
+/* Rate buttons */
+.rate-btns { width:100%; max-width:420px; }
+.rate-label { text-align:center; font-size:13px; color:var(--text2); margin-bottom:10px; font-weight:500; }
+.rate-row { display:flex; gap:10px; }
+.rate-wrong {
+  flex:1; padding:16px; border-radius:var(--radius-sm); border:2px solid var(--danger);
+  background:var(--danger-light); color:var(--danger); font-size:18px;
+  font-weight:700; cursor:pointer; transition:all .15s; font-family:var(--font);
+}
+.rate-right {
+  flex:1; padding:16px; border-radius:var(--radius-sm); border:2px solid var(--success);
+  background:var(--success-light); color:var(--success); font-size:18px;
+  font-weight:700; cursor:pointer; transition:all .15s; font-family:var(--font);
+}
+.rate-wrong:active,.rate-right:active { transform:scale(.95); }
+
+/* Progress */
+.progress-bar {
+  height:8px; background:var(--bg); border-radius:4px; overflow:hidden; margin-bottom:14px;
+}
+.progress-bar .fill { height:100%; background:var(--primary); border-radius:4px; transition:width .4s cubic-bezier(.4,0,.2,1); }
+
+/* Browse */
+.filter-scroll {
+  display:flex; gap:8px; overflow-x:auto; padding:2px 0 14px; scrollbar-width:none;
+}
+.filter-scroll::-webkit-scrollbar{display:none}
+.filter-chip {
+  flex-shrink:0; padding:7px 16px; border-radius:20px; border:1.5px solid var(--border);
+  background:var(--surface); font-size:13px; cursor:pointer; white-space:nowrap;
+  transition:all .2s; font-family:var(--font); color:var(--text); font-weight:500;
+}
+.filter-chip.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+.browse-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+@media(min-width:480px){ .browse-grid{grid-template-columns:repeat(4,1fr)} }
+@media(min-width:768px){ .browse-grid{grid-template-columns:repeat(6,1fr)} }
+.browse-cell {
+  background:var(--surface); border-radius:var(--radius-sm); overflow:hidden;
+  border:1px solid var(--border); cursor:pointer; text-align:center;
+  transition:all .15s;
+}
+.browse-cell:active{transform:scale(.96)}
+.browse-cell img{width:100%;aspect-ratio:1;object-fit:contain;padding:10px;background:#fff}
+.browse-cell .name{font-size:11px;padding:6px 4px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.browse-cell .stars{font-size:9px;padding-bottom:6px}
+
+/* Settings */
+.setting-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 0; border-bottom:1px solid var(--border);
+}
+.setting-item:last-child{border-bottom:none}
+.setting-item .label{font-size:14px;font-weight:500}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{
+  width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);
+  background:var(--surface);font-size:18px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;color:var(--text);transition:all .15s;
+}
+.stepper button:active{background:var(--primary-light);border-color:var(--primary)}
+.stepper .val{font-size:16px;font-weight:700;min-width:28px;text-align:center}
+
+.toggle-switch{
+  width:50px;height:30px;border-radius:15px;border:none;
+  background:var(--border);cursor:pointer;position:relative;transition:background .25s;
+}
+.toggle-switch.on{background:var(--primary)}
+.toggle-switch::after{
+  content:'';position:absolute;top:3px;left:3px;
+  width:24px;height:24px;border-radius:50%;background:#fff;
+  transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.15);
+}
+.toggle-switch.on::after{transform:translateX(20px)}
+
+/* Drug list */
+.drug-row{
+  display:flex;align-items:center;gap:12px;padding:10px 0;
+  border-bottom:1px solid var(--border);
+}
+.drug-row img{width:44px;height:44px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid var(--border);flex-shrink:0}
+.drug-row .info{flex:1;min-width:0}
+.drug-row .info .name{font-size:14px;font-weight:600}
+.drug-row .info .cat{font-size:11px;color:var(--text2)}
+
+/* Modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;
+  display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s;
+}
+.modal{
+  background:var(--surface);border-radius:20px 20px 0 0;width:100%;
+  max-width:500px;max-height:88vh;overflow-y:auto;padding:24px 20px;
+  animation:slideUp .3s cubic-bezier(.4,0,.2,1);
+}
+.modal h3{margin-bottom:18px;font-size:18px;font-weight:700}
+.modal input,.modal select,.modal textarea{
+  width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);
+  font-size:14px;margin-bottom:12px;background:var(--bg);color:var(--text);font-family:var(--font);
+}
+.modal input:focus,.modal select:focus,.modal textarea:focus{outline:none;border-color:var(--primary)}
+
+/* Summary */
+.summary-card{text-align:center;padding:32px 20px}
+.summary-card .big-num{font-size:56px;font-weight:800;letter-spacing:-2px}
+.summary-card .big-num.good{color:var(--success)}
+
+/* Search */
+.search-input{
+  width:100%;padding:11px 16px;border-radius:24px;border:1.5px solid var(--border);
+  font-size:14px;margin-bottom:12px;background:var(--bg);color:var(--text);font-family:var(--font);
+}
+.search-input:focus{outline:none;border-color:var(--primary)}
+
+/* Toast */
+.toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:300;
+  background:#1a2e2b;color:#fff;padding:10px 22px;border-radius:24px;
+  font-size:13px;font-weight:600;animation:popIn .25s;pointer-events:none;
+}
+
+/* Empty */
+.empty-state{text-align:center;padding:48px 20px;color:var(--text2)}
+.empty-state .icon{font-size:56px;margin-bottom:14px}
+
+/* Category progress bars */
+.cat-progress{margin-bottom:10px}
+.cat-progress .cat-name{font-size:13px;font-weight:600;margin-bottom:3px;display:flex;justify-content:space-between}
+.cat-progress .cat-name span:last-child{color:var(--text2);font-weight:400;font-size:12px}
+.cat-progress .bar{height:6px;background:var(--bg);border-radius:3px;overflow:hidden}
+.cat-progress .bar .fill{height:100%;background:var(--primary);border-radius:3px;transition:width .5s}
+
+/* Tip card */
+.tip-card{
+  background:var(--accent-light);border:1px solid #c7d2fe;border-radius:var(--radius);
+  padding:16px;margin-bottom:12px;
+}
+.tip-card .tip-title{font-weight:700;font-size:14px;color:var(--accent);margin-bottom:6px}
+.tip-card .tip-body{font-size:13px;color:var(--text);line-height:1.6}
+
+/* Desktop */
+@media(min-width:768px){
+  #app{max-width:640px;margin:0 auto;padding-top:24px}
+  nav{max-width:640px;left:50%;transform:translateX(-50%);border-radius:20px 20px 0 0}
+}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<nav id="nav">
+  <button class="tab active" data-view="dashboard"><span class="icon">📊</span>仪表盘</button>
+  <button class="tab" data-view="learn"><span class="icon">📖</span>学习<span class="badge" id="dueBadge" style="display:none">0</span></button>
+  <button class="tab" data-view="browse"><span class="icon">🔍</span>浏览</button>
+  <button class="tab" data-view="settings"><span class="icon">⚙️</span>设置</button>
+</nav>
+
+<script>
+// ========== DRUG DATA ==========
+const DRUG_DATA = [
+  {id:1,name:'地西泮',cat:'镇静催眠抗焦虑药'},
+  {id:2,name:'苯巴比妥',cat:'镇静催眠抗焦虑药'},
+  {id:3,name:'氯丙嗪',cat:'抗精神病药'},
+  {id:4,name:'氟西汀',cat:'抗抑郁药'},
+  {id:5,name:'哌替啶',cat:'镇痛药'},
+  {id:6,name:'吗啡',cat:'镇痛药'},
+  {id:7,name:'可待因',cat:'镇痛药'},
+  {id:8,name:'左旋多巴',cat:'抗帕金森药'},
+  {id:9,name:'阿托品',cat:'胆碱与肾上腺素药'},
+  {id:10,name:'毛果芸香碱',cat:'胆碱与肾上腺素药'},
+  {id:11,name:'肾上腺素',cat:'胆碱与肾上腺素药'},
+  {id:12,name:'普萘洛尔',cat:'β-阻断剂与心血管药'},
+  {id:13,name:'盐酸苯海拉明',cat:'抗组胺药'},
+  {id:14,name:'马来酸氯苯那敏',cat:'抗组胺药'},
+  {id:15,name:'盐酸普鲁卡因',cat:'局麻与抗心律失常药'},
+  {id:16,name:'盐酸利多卡因',cat:'局麻与抗心律失常药'},
+  {id:17,name:'硝苯地平',cat:'钙通道阻滞剂'},
+  {id:18,name:'维拉帕米',cat:'钙通道阻滞剂'},
+  {id:19,name:'地尔硫卓',cat:'钙通道阻滞剂'},
+  {id:20,name:'普鲁卡因胺',cat:'局麻与抗心律失常药'},
+  {id:21,name:'硝酸甘油',cat:'β-阻断剂与心血管药'},
+  {id:22,name:'胺碘酮',cat:'局麻与抗心律失常药'},
+  {id:23,name:'卡托普利',cat:'RAS与降脂药'},
+  {id:24,name:'氯沙坦',cat:'RAS与降脂药'},
+  {id:25,name:'洛伐他汀',cat:'RAS与降脂药'},
+  {id:26,name:'地高辛',cat:'β-阻断剂与心血管药'},
+  {id:27,name:'氯吡格雷',cat:'内分泌与代谢药'},
+  {id:28,name:'西咪替丁',cat:'消化系统药'},
+  {id:29,name:'奥美拉唑',cat:'消化系统药'},
+  {id:30,name:'阿司匹林',cat:'NSAIDs与解热镇痛药'},
+  {id:31,name:'对乙酰氨基酚',cat:'NSAIDs与解热镇痛药'},
+  {id:32,name:'贝诺酯',cat:'NSAIDs与解热镇痛药'},
+  {id:33,name:'吲哚美辛',cat:'NSAIDs与解热镇痛药'},
+  {id:34,name:'布洛芬',cat:'NSAIDs与解热镇痛药'},
+  {id:35,name:'丙磺舒',cat:'NSAIDs与解热镇痛药'},
+  {id:36,name:'5-氟尿嘧啶',cat:'抗肿瘤药'},
+  {id:37,name:'甲氨蝶呤',cat:'抗肿瘤药'},
+  {id:38,name:'喜树碱',cat:'抗肿瘤药'},
+  {id:39,name:'青霉素',cat:'β-内酰胺类抗生素'},
+  {id:40,name:'头孢氨苄',cat:'β-内酰胺类抗生素'},
+  {id:41,name:'四环素',cat:'其他抗生素'},
+  {id:42,name:'氯霉素',cat:'其他抗生素'},
+  {id:43,name:'喹诺酮类',cat:'喹诺酮类抗菌药'},
+  {id:44,name:'盐酸诺氟沙星',cat:'喹诺酮类抗菌药'},
+  {id:45,name:'环丙沙星',cat:'喹诺酮类抗菌药'},
+  {id:46,name:'左氧氟沙星',cat:'喹诺酮类抗菌药'},
+  {id:47,name:'异烟肼',cat:'抗结核药'},
+  {id:48,name:'对氨基水杨酸钠',cat:'抗结核药'},
+  {id:49,name:'乙胺丁醇',cat:'抗结核药'},
+  {id:50,name:'磺胺嘧啶',cat:'其他抗生素'},
+  {id:51,name:'磺胺甲唑',cat:'其他抗生素'},
+  {id:52,name:'甲氧苄啶',cat:'其他抗生素'},
+  {id:53,name:'酮康唑',cat:'抗真菌药'},
+  {id:54,name:'特比萘芬',cat:'抗真菌药'},
+  {id:55,name:'利巴韦林',cat:'抗病毒药'},
+  {id:56,name:'齐多夫定',cat:'抗病毒药'},
+  {id:57,name:'利匹韦林',cat:'抗病毒药'},
+  {id:58,name:'奈韦拉平',cat:'抗病毒药'},
+  {id:59,name:'奥司他韦',cat:'抗病毒药'},
+  {id:60,name:'盐酸金刚烷胺',cat:'抗病毒药'},
+  {id:61,name:'索磷布韦',cat:'抗病毒药'},
+  {id:62,name:'茚地那韦',cat:'抗病毒药'},
+  {id:63,name:'青蒿素',cat:'抗疟药'},
+  {id:64,name:'甲苯磺丁脲',cat:'降糖药'},
+  {id:65,name:'格列本脲',cat:'降糖药'},
+  {id:66,name:'瑞格列奈',cat:'降糖药'},
+  {id:67,name:'二甲双胍',cat:'降糖药'},
+  {id:68,name:'罗格列酮',cat:'降糖药'},
+  {id:69,name:'呋塞米',cat:'利尿药'},
+  {id:70,name:'氢氯噻嗪',cat:'利尿药'},
+  {id:71,name:'螺内酯',cat:'利尿药'},
+  {id:72,name:'地塞米松',cat:'甾体激素类'},
+  {id:73,name:'雌二醇',cat:'甾体激素类'},
+  {id:74,name:'黄体酮',cat:'甾体激素类'},
+  {id:75,name:'睾酮',cat:'甾体激素类'},
+  {id:76,name:'苯丙酸诺龙',cat:'甾体激素类'},
+  {id:77,name:'维生素C',cat:'维生素类'},
+  {id:78,name:'维生素A',cat:'维生素类'},
+  {id:79,name:'氟哌啶醇',cat:'抗精神病药'},
+  {id:80,name:'格列吡嗪',cat:'降糖药'},
+  {id:81,name:'格列齐特',cat:'降糖药'},
+  {id:82,name:'氯氮平',cat:'抗精神病药'},
+  {id:83,name:'苯妥英钠',cat:'抗癫痫药'},
+  {id:84,name:'沙丁胺醇',cat:'β-阻断剂与心血管药'},
+  {id:85,name:'环磷酰胺',cat:'抗肿瘤药'},
+  {id:86,name:'咖啡因',cat:'中枢兴奋药'},
+  {id:87,name:'米力农',cat:'β-阻断剂与心血管药'},
+  {id:88,name:'氯雷他定',cat:'抗组胺药'},
+  {id:89,name:'卡马西平',cat:'抗癫痫药'},
+  {id:90,name:'美沙酮',cat:'镇痛药'},
+  {id:91,name:'东莨菪碱',cat:'胆碱与肾上腺素药'},
+  {id:92,name:'山莨菪碱',cat:'胆碱与肾上腺素药'},
+  {id:93,name:'奎尼丁',cat:'局麻与抗心律失常药'},
+  {id:94,name:'阿莫西林',cat:'β-内酰胺类抗生素'},
+  {id:95,name:'塞替派',cat:'抗肿瘤药'},
+  {id:96,name:'白消安',cat:'抗肿瘤药'},
+  {id:97,name:'卡莫司汀',cat:'抗肿瘤药'},
+  {id:98,name:'阿昔洛韦',cat:'抗病毒药'},
+  {id:99,name:'褪黑素',cat:'镇静催眠抗焦虑药'},
+  {id:100,name:'雷美替胺',cat:'镇静催眠抗焦虑药'},
+  {id:101,name:'双氯芬酸钠',cat:'NSAIDs与解热镇痛药'},
+  {id:102,name:'卡巴胆碱',cat:'胆碱与肾上腺素药'},
+  {id:103,name:'碘解磷定',cat:'胆碱与肾上腺素药'},
+  {id:104,name:'盐酸苯海索',cat:'抗帕金森药'},
+  {id:105,name:'瑞格列奈',cat:'降糖药'},
+  {id:106,name:'巯嘌呤',cat:'抗肿瘤药'},
+  {id:107,name:'麻黄碱',cat:'胆碱与肾上腺素药'},
+  {id:108,name:'唑吡坦',cat:'镇静催眠抗焦虑药'},
+  {id:109,name:'艾司佐匹克隆',cat:'镇静催眠抗焦虑药'},
+  {id:110,name:'芬太尼',cat:'镇痛药'},
+  {id:111,name:'泮托拉唑',cat:'消化系统药'},
+  {id:112,name:'克拉维酸',cat:'β-内酰胺类抗生素'},
+  {id:113,name:'可乐定',cat:'β-阻断剂与心血管药'},
+  {id:114,name:'阿糖胞苷',cat:'抗肿瘤药'},
+  {id:115,name:'丙磺舒',cat:'NSAIDs与解热镇痛药'},
+  {id:116,name:'扎来普隆',cat:'镇静催眠抗焦虑药'},
+  {id:117,name:'吉非罗齐',cat:'RAS与降脂药'},
+  {id:118,name:'昂丹司琼',cat:'消化系统药'},
+  {id:119,name:'艾维雷韦',cat:'抗病毒药'},
+  {id:120,name:'利培酮',cat:'抗精神病药'},
+  {id:121,name:'美托洛尔',cat:'β-阻断剂与心血管药'},
+  {id:122,name:'多潘立酮',cat:'消化系统药'},
+  {id:123,name:'乙酰唑胺',cat:'利尿药'},
+  {id:124,name:'溴新斯的明',cat:'胆碱与肾上腺素药'},
+  {id:125,name:'普罗帕酮',cat:'局麻与抗心律失常药'},
+  {id:126,name:'氯贝丁酯',cat:'RAS与降脂药'},
+  {id:127,name:'兰索拉唑',cat:'消化系统药'},
+  {id:128,name:'吡罗昔康',cat:'NSAIDs与解热镇痛药'}
+];
+
+let ALL_CATEGORIES = [...new Set(DRUG_DATA.map(d=>d.cat))].sort();
+
+// ========== INDEXEDDB ==========
+const DB_NAME='drugFlashcard', DB_VER=1;
+let db;
+
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    const req=indexedDB.open(DB_NAME,DB_VER);
+    req.onupgradeneeded=e=>{
+      const db=e.target.result;
+      if(!db.objectStoreNames.contains('drugs')){
+        const ds=db.createObjectStore('drugs',{keyPath:'id'});
+        ds.createIndex('cat','cat');
+      }
+      if(!db.objectStoreNames.contains('progress')){
+        const ps=db.createObjectStore('progress',{keyPath:'drugId'});
+        ps.createIndex('nextReview','nextReview');
+        ps.createIndex('stage','stage');
+      }
+      if(!db.objectStoreNames.contains('logs')){
+        db.createObjectStore('logs',{keyPath:'id',autoIncrement:true});
+      }
+      if(!db.objectStoreNames.contains('settings')){
+        db.createObjectStore('settings',{keyPath:'key'});
+      }
+    };
+    req.onsuccess=e=>{ db=e.target.result; seedIfNeeded().then(()=>resolve(db)); };
+    req.onerror=()=>reject(req.error);
+  });
+}
+
+async function seedIfNeeded(){
+  const count=await new Promise(r=>{
+    const tx=db.transaction('drugs','readonly');
+    const req=tx.objectStore('drugs').count();
+    req.onsuccess=()=>r(req.result);
+  });
+  if(count===0){
+    const tx=db.transaction('drugs','readwrite');
+    const store=tx.objectStore('drugs');
+    DRUG_DATA.forEach(d=>store.add({...d,active:true,notes:''}));
+    await new Promise(r=>{tx.oncomplete=r;});
+  }
+  // Init default settings
+  const defaults={dailyNewCards:'10',dailyReviewLimit:'50',quizDirection:'both',darkMode:'false'};
+  const tx=db.transaction('settings','readwrite');
+  const ss=tx.objectStore('settings');
+  for(const [k,v] of Object.entries(defaults)){
+    const r=ss.get(k);
+    r.onsuccess=()=>{if(r.result===undefined) ss.put({key:k,value:v});};
+  }
+  await new Promise(r=>{tx.oncomplete=r;});
+}
+
+function dbGet(store,key){return new Promise(r=>{const tx=db.transaction(store,'readonly');const req=tx.objectStore(store).get(key);req.onsuccess=()=>r(req.result);});}
+function dbGetAll(store){return new Promise(r=>{const tx=db.transaction(store,'readonly');const req=tx.objectStore(store).getAll();req.onsuccess=()=>r(req.result);});}
+function dbPut(store,val){return new Promise(r=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).put(val);tx.oncomplete=()=>r();});}
+function dbDelete(store,key){return new Promise(r=>{const tx=db.transaction(store,'readwrite');tx.objectStore(store).delete(key);tx.oncomplete=()=>r();});}
+function dbGetByIndex(store,index,value){return new Promise(r=>{const tx=db.transaction(store,'readonly');const req=tx.objectStore(store).index(index).getAll(value);req.onsuccess=()=>r(req.result);});}
+function dbGetAllByIndex(store,index,query){
+  return new Promise(r=>{
+    const tx=db.transaction(store,'readonly');
+    const req=tx.objectStore(store).index(index).openCursor(query);
+    const results=[];
+    req.onsuccess=e=>{const cursor=e.target.result;if(cursor){results.push(cursor.value);cursor.continue();}else r(results);};
+  });
+}
+
+// ========== SRS ENGINE ==========
+const LEARNING_STEPS=[1,10,60,1440,2880,5760,10080,20160,43200]; // minutes
+const GRADUATED_INTERVALS=[1,2,4,7,15,30,60,120]; // days
+
+function calcNextReview(progress,quality){
+  const p={...progress};
+  p.totalReviews=(p.totalReviews||0)+1;
+  if(quality>=3){p.totalCorrect=(p.totalCorrect||0)+1;p.streak=(p.streak||0)+1;}
+  else{p.totalIncorrect=(p.totalIncorrect||0)+1;p.streak=0;}
+
+  const now=Date.now();
+  p.lastReview=now;
+  p.lastQuality=quality;
+
+  if(quality<3){
+    // Failed - reset
+    p.stage=0;
+    p.step=0;
+    p.interval=LEARNING_STEPS[0];
+    p.easeFactor=Math.max(1.3,(p.easeFactor||2.5)-0.2);
+    p.nextReview=now+p.interval*60000;
+    return p;
+  }
+
+  p.easeFactor=p.easeFactor||2.5;
+  if(quality>=4&&p.streak>=3) p.easeFactor=Math.min(3.0,p.easeFactor+0.15);
+
+  if(p.stage<LEARNING_STEPS.length){
+    // Learning phase
+    p.step=(p.step||0)+1;
+    if(p.step>=LEARNING_STEPS.length){
+      p.stage=LEARNING_STEPS.length; // Graduated
+      p.interval=Math.round(GRADUATED_INTERVALS[0]*p.easeFactor);
+    }else{
+      p.interval=LEARNING_STEPS[p.step];
+    }
+  }else{
+    // Graduated phase
+    p.interval=Math.round(p.interval*p.easeFactor);
+  }
+  p.interval=Math.min(365,Math.max(1,p.interval));
+  p.nextReview=now+p.interval*60000;
+  return p;
+}
+
+async function getDueCards(limit=50){
+  const now=Date.now();
+  const all=await dbGetAll('progress');
+  const due=all.filter(p=>p.nextReview&&p.nextReview<=now).sort((a,b)=>a.nextReview-b.nextReview);
+  return {cards:due.slice(0,limit),total:due.length};
+}
+
+async function getNewCards(limit=10){
+  const allProgress=await dbGetAll('progress');
+  const studied=new Set(allProgress.map(p=>p.drugId));
+  const drugs=await dbGetAll('drugs');
+  const fresh=drugs.filter(d=>d.active!==false&&!studied.has(d.id));
+  // Shuffle
+  for(let i=fresh.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fresh[i],fresh[j]]=[fresh[j],fresh[i]];}
+  return fresh.slice(0,limit);
+}
+
+// ========== APP STATE ==========
+let currentView='dashboard';
+let studyCards=[], studyIndex=0, studyDirection='i2n', studyRevealed=false;
+let browseFilter='全部';
+
+// ========== VIEW RENDERING ==========
+const app=document.getElementById('app');
+const nav=document.getElementById('nav');
+
+function showView(name){
+  currentView=name;
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const view=document.getElementById('view-'+name);
+  if(view) view.classList.add('active');
+  document.querySelectorAll('nav .tab').forEach(t=>t.classList.remove('active'));
+  const tab=nav.querySelector(`[data-view="${name}"]`);
+  if(tab) tab.classList.add('active');
+  app.scrollTop=0;
+}
+
+async function renderDashboard(){
+  const due=await getDueCards();
+  const allProgress=await dbGetAll('progress');
+  const allDrugs=await dbGetAll('drugs');
+  const activeDrugs=allDrugs.filter(d=>d.active!==false);
+  const studied=allProgress.filter(p=>p.totalReviews>0);
+  const graduated=allProgress.filter(p=>p.stage>=LEARNING_STEPS.length);
+  const streak=await calcStreak();
+
+  // Today's session
+  const today=new Date().toISOString().slice(0,10);
+  const todayLogs=(await dbGetAll('logs')).filter(l=>{
+    return new Date(l.reviewedAt).toISOString().slice(0,10)===today;
+  });
+
+  app.innerHTML=`
+  <div id="view-dashboard" class="view active">
+
+  <div style="font-size:18px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+    <span style="font-size:22px">🏠</span>仪表盘
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span>今日概览</div>
+    <div class="stats-row">
+      <div class="stat-card warn"><div class="num">${streak}</div><div class="label">🔥 连续打卡</div></div>
+      <div class="stat-card primary"><div class="num">${studied.length}</div><div class="label">已学习</div></div>
+      <div class="stat-card danger"><div class="num">${due.total}</div><div class="label">待复习</div></div>
+    </div>
+    ${todayLogs.length>0?`
+    <div style="display:flex;gap:16px;font-size:13px;padding:8px 0;border-top:1px solid var(--border)">
+      <span style="color:var(--success)">✅ ${todayLogs.filter(l=>l.quality>=3).length} 正确</span>
+      <span style="color:var(--danger)">❌ ${todayLogs.filter(l=>l.quality<3).length} 错误</span>
+      <span style="color:var(--text2)">📖 共${todayLogs.length}次</span>
+    </div>`:''}
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="dot"></span>学习进度</div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px">
+      <span>总进度</span><span style="font-weight:600">${studied.length}/${activeDrugs.length}</span>
+    </div>
+    <div class="progress-bar"><div class="fill" style="width:${activeDrugs.length?Math.round(studied.length/activeDrugs.length*100):0}%"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:4px;font-size:13px">
+      <span>长期记忆</span><span style="font-weight:600">${graduated.length}/${activeDrugs.length}</span>
+    </div>
+    <div class="progress-bar"><div class="fill" style="width:${activeDrugs.length?Math.round(graduated.length/activeDrugs.length*100):0}%;background:var(--success)"></div></div>
+  </div>
+
+  <button class="btn btn-primary" onclick="startNewLearning()" style="margin-bottom:10px">
+    📖 学习新卡片 (今日${todayLogs.filter(l=>l.isNew).length||0}/10)
+  </button>
+  <button class="btn btn-accent" onclick="startReview()" style="margin-bottom:10px">
+    🔄 开始复习 ${due.total>0?`(${Math.min(due.total,50)}张待复习)`:'(已全部完成 ✅)'}
+  </button>
+  <button class="btn btn-surface" onclick="showView('browse');renderBrowse();">
+    🔍 快速浏览全部结构
+  </button>
+  </div>`;
+}
+
+async function calcStreak(){
+  const logs=await dbGetAll('logs');
+  if(logs.length===0) return 0;
+  const days=new Set(logs.map(l=>new Date(l.reviewedAt).toISOString().slice(0,10)));
+  const sorted=[...days].sort().reverse();
+  let streak=0;
+  const today=new Date().toISOString().slice(0,10);
+  const check=new Date(sorted[0]+'T00:00:00');
+  const todayDate=new Date(today+'T00:00:00');
+  if(check<todayDate&&check.getTime()<todayDate.getTime()-2*86400000) return 0;
+  if(sorted[0]!==today&&sorted[0]!==yesterday()) return 0;
+  const start=new Date((sorted[0]===today?today:yesterday())+'T00:00:00');
+  for(let i=0;i<365;i++){
+    const d=new Date(start.getTime()-i*86400000).toISOString().slice(0,10);
+    if(days.has(d)) streak++; else break;
+  }
+  return streak;
+}
+function yesterday(){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().slice(0,10);}
+
+// ========== NEW LEARNING ==========
+async function renderLearnMenu(){
+  const allDrugs=await dbGetAll('drugs');
+  const allProgress=await dbGetAll('progress');
+  const active=allDrugs.filter(d=>d.active!==false);
+  const progMap={};
+  allProgress.forEach(p=>progMap[p.drugId]=p);
+
+  // Category stats
+  const catStats={};
+  active.forEach(d=>{
+    if(!catStats[d.cat]) catStats[d.cat]={total:0,learned:0,mastered:0};
+    catStats[d.cat].total++;
+    const p=progMap[d.id];
+    if(p&&p.totalReviews>0) catStats[d.cat].learned++;
+    if(p&&p.stage>=LEARNING_STEPS.length) catStats[d.cat].mastered++;
+  });
+
+  // Weakest cards
+  const withErrors=allProgress.filter(p=>p.totalIncorrect>0).sort((a,b)=>b.totalIncorrect-a.totalIncorrect).slice(0,5);
+  const drugMap={}; active.forEach(d=>drugMap[d.id]=d);
+
+  // Daily activity (14 days)
+  const logs=await dbGetAll('logs');
+  const dayMap={};
+  for(let i=13;i>=0;i--){
+    const d=new Date();d.setDate(d.getDate()-i);
+    dayMap[d.toISOString().slice(0,10)]=0;
+  }
+  logs.forEach(l=>{
+    const d=new Date(l.reviewedAt).toISOString().slice(0,10);
+    if(dayMap[d]!==undefined) dayMap[d]++;
+  });
+  const maxDay=Math.max(1,...Object.values(dayMap));
+  const dayBars=Object.entries(dayMap).map(([date,count])=>({
+    date,count,pct:Math.round(count/maxDay*100),label:date.slice(5)
+  }));
+
+  // Overall stats
+  const totalReviews=allProgress.reduce((s,p)=>s+(p.totalReviews||0),0);
+  const mastered=allProgress.filter(p=>p.stage>=LEARNING_STEPS.length).length;
+  const learning=allProgress.filter(p=>p.totalReviews>0&&p.stage<LEARNING_STEPS.length).length;
+  const untouched=active.length-learning-mastered;
+
+  // Tips
+  const tips=[
+    {icon:'💡',title:'联想记忆法',body:'将药物结构与药名建立联系。如"苯二氮䓬类"（地西泮）含有一个七元二氮环，形似"西"字的偏旁结构。'},
+    {icon:'📐',title:'骨架识别',body:'先记核心骨架再记取代基。β-内酰胺类（青霉素、头孢）都有四元β-内酰胺环；喹诺酮类都有4-喹诺酮母核。'},
+    {icon:'🔬',title:'SAR联想',body:'构效关系帮助记忆。磺胺类的对氨基苯磺酰胺是必需基团；PPI类的苯并咪唑+吡啶是活性关键。'},
+    {icon:'📝',title:'对比记忆',body:'相似结构对比着记。奥美拉唑/泮托拉唑/兰索拉唑都是苯并咪唑类PPI，区别在取代基。普萘洛尔/美托洛尔都是芳氧丙醇胺类β阻断剂。'},
+    {icon:'🔄',title:'间隔重复',body:`你已经背诵了 ${learning+mastered} 个结构，其中 ${mastered} 个已进入长期记忆。坚持每天复习，记忆更牢固。`},
+  ];
+  const randomTip=tips[Math.floor(Math.random()*tips.length)];
+
+  app.innerHTML=`
+  <div id="view-learn" class="view active">
+
+  <div style="font-size:18px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+    <span style="font-size:22px">📊</span>学习分析
+  </div>
+
+  <!-- Overall -->
+  <div class="card">
+    <div class="card-header"><span class="dot"></span>总体进度</div>
+    <div class="stats-row">
+      <div class="stat-card success"><div class="num">${mastered}</div><div class="label">已掌握</div></div>
+      <div class="stat-card primary"><div class="num">${learning}</div><div class="label">学习中</div></div>
+      <div class="stat-card"><div class="num" style="color:var(--text2)">${untouched}</div><div class="label">未学习</div></div>
+    </div>
+    <div class="progress-bar"><div class="fill" style="width:${Math.round((learning+mastered)/Math.max(1,active.length)*100)}%"></div></div>
+    <div style="font-size:12px;color:var(--text2)">总复习次数: ${totalReviews} · 活跃卡片: ${active.length}</div>
+  </div>
+
+  <!-- Category breakdown -->
+  <div class="card">
+    <div class="card-header"><span class="dot"></span>分类掌握度</div>
+    ${Object.entries(catStats).sort((a,b)=>b[1].total-a[1].total).slice(0,8).map(([cat,s])=>`
+      <div class="cat-progress">
+        <div class="cat-name"><span>${cat}</span><span>${s.mastered}/${s.total}</span></div>
+        <div class="bar"><div class="fill" style="width:${Math.round(s.mastered/Math.max(1,s.total)*100)}%"></div></div>
+      </div>
+    `).join('')}
+    ${Object.keys(catStats).length>8?`<div style="text-align:center;font-size:12px;color:var(--text2);margin-top:6px">还有 ${Object.keys(catStats).length-8} 个分类...</div>`:''}
+  </div>
+
+  <!-- 14-day activity -->
+  <div class="card">
+    <div class="card-header"><span class="dot"></span>近14天学习量</div>
+    <div style="display:flex;align-items:flex-end;gap:4px;height:80px;padding:4px 0">
+      ${dayBars.map(d=>`
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+          <div style="font-size:9px;color:var(--text2)">${d.count||''}</div>
+          <div style="width:100%;background:${d.count>0?'var(--primary)':'var(--border)'};border-radius:3px 3px 0 0;height:${Math.max(4,d.pct)}%"></div>
+          <div style="font-size:8px;color:var(--text2);transform:rotate(-45deg);white-space:nowrap">${d.label}</div>
+        </div>
+      `).join('')}
+    </div>
+  </div>
+
+  <!-- Weakest cards -->
+  ${withErrors.length>0?`
+  <div class="card">
+    <div class="card-header"><span class="dot" style="background:var(--danger)"></span>需要加强 (错误最多)</div>
+    ${withErrors.map(p=>{
+      const drug=drugMap[p.drugId];
+      return drug?`<div class="drug-row" style="cursor:pointer" onclick="previewCard(${drug.id})">
+        <img src="${getDrugImage(drug)}" onerror="this.style.display='none'">
+        <div class="info"><div class="name">${drug.name}</div><div class="cat">❌ ${p.totalIncorrect}次错误 · ${drug.cat}</div></div>
+        <div style="color:var(--text2);font-size:20px">›</div>
+      </div>`:'';
+    }).join('')}
+  </div>`:''}
+
+  <!-- Tips -->
+  <div class="tip-card" id="tipCard" onclick="nextTip()">
+    <div class="tip-title">${randomTip.icon} ${randomTip.title}</div>
+    <div class="tip-body">${randomTip.body}</div>
+    <div style="font-size:10px;color:var(--text2);margin-top:8px">点击切换技巧 →</div>
+  </div>
+
+  </div>`;
+
+  window._tips=tips;
+  window._tipIndex=tips.indexOf(randomTip);
+}
+function nextTip(){
+  const tips=window._tips||[];
+  window._tipIndex=((window._tipIndex||0)+1)%tips.length;
+  const t=tips[window._tipIndex];
+  const card=document.getElementById('tipCard');
+  if(card) card.innerHTML=`
+    <div class="tip-title">${t.icon} ${t.title}</div>
+    <div class="tip-body">${t.body}</div>
+    <div style="font-size:10px;color:var(--text2);margin-top:8px">点击切换技巧 →</div>`;
+}
+
+async function startNewLearning(){
+  const limit=parseInt((await dbGet('settings','dailyNewCards'))?.value||'10');
+  const cards=await getNewCards(limit);
+  if(cards.length===0){
+    toast('🎉 所有卡片都已学完！');
+    return;
+  }
+  studyCards=cards;
+  studyIndex=0;
+  studyDirection='i2n';
+  studyRevealed=false;
+  showView('learn');
+  renderStudyCard();
+}
+
+async function startReview(){
+  const {cards,total}=await getDueCards(50);
+  if(cards.length===0){
+    toast('✅ 暂无待复习卡片！');
+    return;
+  }
+  // Resolve drug info
+  const drugs=await dbGetAll('drugs');
+  const drugMap={};
+  drugs.forEach(d=>drugMap[d.id]=d);
+  studyCards=cards.map(p=>({...p,drug:drugMap[p.drugId]||drugMap[p.id]}));
+  studyIndex=0;
+  studyRevealed=false;
+  showView('learn');
+  renderStudyCard();
+}
+
+function renderStudyCard(){
+  if(studyIndex>=studyCards.length){
+    renderStudySummary();
+    return;
+  }
+  const card=studyCards[studyIndex];
+  const drug=card.drug||card;
+  const total=studyCards.length;
+  const isReview=!!card.nextReview;
+  const dirLabel=studyDirection==='i2n'?'看图识名':'看名识图';
+  studyRevealed=false;
+
+  app.innerHTML=`
+  <div id="view-learn" class="view active">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+      <button class="btn btn-sm btn-surface" onclick="showView('dashboard');renderDashboard();">←</button>
+      <div style="flex:1;font-size:14px;font-weight:600">${isReview?'复习':'新学习'} · ${dirLabel}</div>
+      <div style="font-size:13px;color:var(--text2)">${studyIndex+1}/${total}</div>
+    </div>
+    <div class="progress-bar"><div class="fill" style="width:${Math.round((studyIndex+1)/total*100)}%"></div></div>
+    ${drug.cat?`<div style="text-align:center;font-size:12px;color:var(--text2);margin-bottom:4px">📂 ${drug.cat}</div>`:''}
+    ${isReview?`<div style="text-align:center;font-size:11px;color:var(--text2);margin-bottom:4px">📝 已复习${card.totalReviews||0}次 · 上次${card.lastReview?new Date(card.lastReview).toLocaleDateString('zh-CN'):'无'}</div>`:''}
+
+    <div class="flashcard-container">
+      <div class="flashcard" id="flashcard" onclick="revealAnswer()">
+        ${studyDirection==='i2n'?`
+          <img src="${getDrugImage(drug)}" alt="结构图" onerror="this.parentElement.innerHTML='<div style=color:var(--text2)>图片加载失败</div>'">
+          <div class="reveal-hint">点击查看药名 →</div>
+        `:`
+          <div class="drug-name">${drug.name}</div>
+          <div class="reveal-hint">点击查看结构 →</div>
+        `}
+      </div>
+
+      <div class="answer-area" id="answerArea" onclick="revealAnswer()">
+        ${studyDirection==='i2n'?'点击此处显示药名':'点击此处显示结构图'}
+      </div>
+
+      <div id="qualitySection" style="display:none;width:100%;max-width:420px;">
+        <div class="rate-label">你答对了吗？</div>
+        <div class="rate-row">
+          <button class="rate-wrong" onclick="rateQuality(false)">✗ 不认识</button>
+          <button class="rate-right" onclick="rateQuality(true)">✓ 认识</button>
+        </div>
+        <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text2)">← 不认识 · 认识 → (键盘方向键)</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function revealAnswer(){
+  if(studyRevealed) return;
+  studyRevealed=true;
+  const card=studyCards[studyIndex];
+  const drug=card.drug||card;
+  const area=document.getElementById('answerArea');
+  const fc=document.getElementById('flashcard');
+
+  if(studyDirection==='i2n'){
+    area.innerHTML=`<span style="font-size:28px;font-weight:700;animation:flipIn .35s">${drug.name}</span>`;
+    area.classList.add('revealed');
+    fc.style.opacity='0.6';
+  }else{
+    area.innerHTML=`<img src="${getDrugImage(drug)}" style="max-width:100%;max-height:260px;object-fit:contain;animation:flipIn .35s">`;
+    area.classList.add('revealed');
+  }
+  document.getElementById('qualitySection').style.display='block';
+}
+
+async function rateQuality(correct){
+  const quality=correct?4:1; // 认识→4, 不认识→1
+  const card=studyCards[studyIndex];
+  const drugId=card.drug?.id||card.drugId||card.id;
+  const drug=card.drug||card;
+  const isReview=!!card.nextReview;
+
+  // Get or init progress
+  let progress=await dbGet('progress',drugId);
+  if(!progress){
+    progress={drugId,stage:0,step:0,easeFactor:2.5,interval:LEARNING_STEPS[0],repetitions:0,streak:0,totalReviews:0,totalCorrect:0,totalIncorrect:0,nextReview:Date.now()+LEARNING_STEPS[0]*60000};
+  }
+  const updated=calcNextReview(progress,quality);
+  await dbPut('progress',updated);
+
+  // Log
+  const logEntry={drugId,direction:studyDirection,quality,reviewedAt:Date.now(),isNew:!isReview};
+  const tx=db.transaction('logs','readwrite');
+  tx.objectStore('logs').add(logEntry);
+  await new Promise(r=>{tx.oncomplete=r;});
+
+  // Next card
+  studyIndex++;
+  studyRevealed=false;
+  updateDueBadge();
+  renderStudyCard();
+}
+
+function renderStudySummary(){
+  const correct=studyCards.filter((_,i)=>true).length; // all counted
+  app.innerHTML=`
+  <div id="view-learn" class="view active">
+    <div class="summary-card card">
+      <div style="font-size:64px;margin-bottom:8px">🎉</div>
+      <div class="big-num good">${studyCards.length}</div>
+      <div style="font-size:16px;color:var(--text2);margin-bottom:16px">本轮完成！继续加油</div>
+      <button class="btn btn-primary" onclick="startReview()">🔄 继续复习</button>
+      <button class="btn btn-surface" style="margin-top:8px" onclick="showView('dashboard');renderDashboard();">📊 返回仪表盘</button>
+    </div>
+  </div>`;
+}
+
+// ========== BROWSE ==========
+async function renderBrowse(filter='全部'){
+  browseFilter=filter;
+  const drugs=await dbGetAll('drugs');
+  const progress=await dbGetAll('progress');
+  const progMap={};
+  progress.forEach(p=>progMap[p.drugId]=p);
+
+  const active=drugs.filter(d=>d.active!==false);
+  const filtered=filter==='全部'?active:active.filter(d=>d.cat===filter);
+
+  let html=`
+  <div id="view-browse" class="view active">
+    <div style="font-size:18px;font-weight:800;margin-bottom:12px">🔍 快速浏览</div>
+    <input class="search-input" placeholder="搜索药名..." oninput="filterBrowse(this.value)" id="browseSearch">
+    <div class="filter-scroll">
+      <button class="filter-chip${filter==='全部'?' active':''}" onclick="renderBrowse('全部')">全部 (${active.length})</button>
+      ${ALL_CATEGORIES.map(c=>`
+        <button class="filter-chip${filter===c?' active':''}" onclick="renderBrowse('${c}')">${c}</button>
+      `).join('')}
+    </div>
+    <div class="browse-grid">
+  `;
+
+  filtered.forEach(d=>{
+    const p=progMap[d.id];
+    let stars='';
+    if(p){
+      if(p.stage>=LEARNING_STEPS.length) stars='⭐⭐⭐';
+      else if(p.stage>=5) stars='⭐⭐';
+      else if(p.totalReviews>0) stars='⭐';
+    }
+    html+=`
+    <div class="browse-cell" onclick="previewCard(${d.id})">
+      <img src="${getDrugImage(d)}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23f1f5f9%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font=%2212px sans-serif%22>无图片</text></svg>'">
+      <div class="name">${d.name}</div>
+      <div class="stars">${stars||'·'}</div>
+    </div>`;
+  });
+
+  html+=`</div></div>`;
+  app.innerHTML=html;
+}
+
+function filterBrowse(q){
+  const items=document.querySelectorAll('.browse-cell');
+  items.forEach(item=>{
+    const name=item.querySelector('.name').textContent;
+    item.style.display=name.includes(q)?'':'none';
+  });
+}
+
+async function previewCard(id){
+  const drug=await dbGet('drugs',id);
+  if(!drug) return;
+  const progress=await dbGet('progress',id);
+  let status='未学习',statusColor='var(--text2)';
+  if(progress){
+    if(progress.stage>=LEARNING_STEPS.length) {status='已掌握 ⭐';statusColor='var(--star)';}
+    else if(progress.totalReviews>0) {status=`学习中 (${progress.totalReviews}次复习)`;statusColor='var(--primary)';}
+  }
+  const html=`
+  <div class="modal-overlay" onclick="if(event.target===this)this.remove()">
+    <div class="modal" style="text-align:center">
+      <img src="${getDrugImage(drug)}" style="max-width:100%;max-height:200px;object-fit:contain;margin-bottom:12px" onerror="this.style.display='none'">
+      <div style="font-size:28px;font-weight:700;margin-bottom:4px">${drug.name}</div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:4px">📂 ${drug.cat}</div>
+      <div style="font-size:14px;color:${statusColor};margin-bottom:12px">${status}</div>
+      ${progress?`<div style="font-size:12px;color:var(--text2);margin-bottom:12px">下次复习: ${new Date(progress.nextReview).toLocaleDateString('zh-CN')} · 间隔${progress.interval>=1440?Math.round(progress.interval/1440)+'天':Math.round(progress.interval/60)+'小时'}</div>`:''}
+      <button class="btn btn-surface btn-sm" onclick="document.querySelector('.modal-overlay').remove()">关闭</button>
+    </div>
+  </div>`;
+  const div=document.createElement('div');
+  div.innerHTML=html;
+  document.body.appendChild(div.firstElementChild);
+}
+
+// ========== SETTINGS ==========
+async function renderSettings(){
+  const dailyNew=await dbGet('settings','dailyNewCards');
+  const dailyReview=await dbGet('settings','dailyReviewLimit');
+  const darkMode=await dbGet('settings','darkMode');
+  const drugs=await dbGetAll('drugs');
+  const active=drugs.filter(d=>d.active!==false);
+
+  app.innerHTML=`
+  <div id="view-settings" class="view active">
+    <div style="font-size:18px;font-weight:800;margin-bottom:16px">⚙️ 设置</div>
+
+    <div class="card">
+      <div class="card-header"><span class="dot"></span>学习设置</div>
+      <div class="setting-item">
+        <span class="label">每日新卡片数</span>
+        <div class="stepper">
+          <button onclick="changeSetting('dailyNewCards',-5)">−</button>
+          <span class="val" id="dailyNewVal">${dailyNew?.value||'10'}</span>
+          <button onclick="changeSetting('dailyNewCards',5)">+</button>
+        </div>
+      </div>
+      <div class="setting-item">
+        <span class="label">每日复习上限</span>
+        <div class="stepper">
+          <button onclick="changeSetting('dailyReviewLimit',-10)">−</button>
+          <span class="val" id="dailyReviewVal">${dailyReview?.value||'50'}</span>
+          <button onclick="changeSetting('dailyReviewLimit',10)">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="dot"></span>外观</div>
+      <div class="setting-item">
+        <span class="label">🌙 深色模式</span>
+        <button class="toggle-switch${darkMode?.value==='true'?' on':''}" onclick="toggleDarkMode()" id="darkToggle"></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="dot"></span>药品管理 (${active.length}种)</div>
+      <button class="btn btn-surface btn-sm" onclick="renderDrugEditor()" style="margin-bottom:8px">📋 编辑药品列表</button>
+      <button class="btn btn-surface btn-sm" onclick="showAddDrug()">➕ 添加新药品</button>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="dot"></span>数据管理</div>
+      <button class="btn btn-surface btn-sm" onclick="exportData()" style="margin-bottom:8px">📤 导出数据备份</button>
+      <button class="btn btn-surface btn-sm" onclick="document.getElementById('importFile').click()" style="margin-bottom:8px">📥 导入数据恢复</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn btn-danger btn-sm" onclick="resetProgress()">🗑 重置学习进度</button>
+    </div>
+
+    <div style="text-align:center;color:var(--text2);font-size:12px;padding:12px">
+      药物结构背诵 v1.0 · 数据存储于浏览器
+    </div>
+  </div>`;
+}
+
+async function changeSetting(key,delta){
+  const s=await dbGet('settings',key);
+  const newVal=Math.max(1,parseInt(s?.value||'10')+delta);
+  await dbPut('settings',{key,value:String(newVal)});
+  const el=document.getElementById(key==='dailyNewCards'?'dailyNewVal':'dailyReviewVal');
+  if(el) el.textContent=newVal;
+}
+
+async function toggleDarkMode(){
+  const s=await dbGet('settings','darkMode');
+  const isDark=s?.value==='true';
+  const newVal=!isDark;
+  await dbPut('settings',{key:'darkMode',value:String(newVal)});
+  document.body.classList.toggle('dark',newVal);
+  const btn=document.getElementById('darkToggle');
+  if(btn) btn.classList.toggle('on',newVal);
+}
+
+async function exportData(){
+  const data={drugs:await dbGetAll('drugs'),progress:await dbGetAll('progress'),logs:await dbGetAll('logs'),settings:await dbGetAll('settings'),exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`drug-flashcard-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();
+  toast('✅ 数据已导出');
+}
+
+async function importData(e){
+  const file=e.target.files[0];
+  if(!file) return;
+  try{
+    const text=await file.text();
+    const data=JSON.parse(text);
+    if(!data.drugs||!data.progress){throw new Error('Invalid format');}
+    // Clear and re-import
+    for(const store of ['drugs','progress','logs','settings']){
+      const tx=db.transaction(store,'readwrite');
+      tx.objectStore(store).clear();
+      await new Promise(r=>{tx.oncomplete=r;});
+    }
+    for(const store of ['drugs','progress','settings']){
+      const tx=db.transaction(store,'readwrite');
+      const os=tx.objectStore(store);
+      (data[store]||[]).forEach(item=>os.put(item));
+      await new Promise(r=>{tx.oncomplete=r;});
+    }
+    // Logs
+    if(data.logs){
+      const tx=db.transaction('logs','readwrite');
+      (data.logs||[]).forEach(item=>tx.objectStore('logs').add(item));
+      await new Promise(r=>{tx.oncomplete=r;});
+    }
+    toast('✅ 数据已导入，请刷新页面');
+    setTimeout(()=>location.reload(),1500);
+  }catch(err){
+    toast('❌ 导入失败: '+err.message);
+  }
+  e.target.value='';
+}
+
+async function resetProgress(){
+  if(!confirm('确定要重置所有学习进度吗？此操作不可撤销！')) return;
+  const tx=db.transaction(['progress','logs'],'readwrite');
+  tx.objectStore('progress').clear();
+  tx.objectStore('logs').clear();
+  await new Promise(r=>{tx.oncomplete=r;});
+  toast('🗑 进度已重置');
+  renderDashboard();
+}
+
+// ========== DRUG EDITOR ==========
+async function renderDrugEditor(search=''){
+  const drugs=await dbGetAll('drugs');
+  const filtered=search?drugs.filter(d=>d.name.includes(search)||d.cat.includes(search)):drugs;
+
+  let html=`
+  <div id="view-settings" class="view active">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <button class="btn btn-sm btn-surface" onclick="renderSettings()">← 返回</button>
+      <div style="font-size:16px;font-weight:700">📋 药品列表</div>
+    </div>
+    <input class="search-input" placeholder="搜索药品..." value="${search}" oninput="renderDrugEditor(this.value)">
+    <div style="font-size:13px;color:var(--text2);margin-bottom:8px">共 ${filtered.length} 种药品</div>
+  `;
+
+  filtered.forEach(d=>{
+    html+=`
+    <div class="drug-row">
+      <img src="${getDrugImage(d)}" onerror="this.style.display='none'">
+      <div class="info">
+        <div class="name">${d.name} <span style="font-size:11px;color:var(--text2)">#${d.id}</span></div>
+        <div class="cat">${d.cat} ${d.active===false?'· <span style=color:var(--danger)>已隐藏</span>':''}</div>
+      </div>
+      <button class="btn btn-sm btn-surface" onclick="editDrug(${d.id})">✏️</button>
+      <button class="btn btn-sm btn-danger" onclick="deleteDrug(${d.id})">🗑</button>
+    </div>`;
+  });
+
+  html+=`</div>`;
+  app.innerHTML=html;
+}
+
+async function editDrug(id){
+  const drug=await dbGet('drugs',id);
+  if(!drug) return;
+  const hasCustom=drug.customImage?'✅ 已有自定义图片':'';
+  const html=`
+  <div class="modal-overlay" onclick="if(event.target===this)this.remove()">
+    <div class="modal">
+      <h3>编辑药品 #${id}</h3>
+      <div style="text-align:center;margin-bottom:12px">
+        <img id="editPreview" src="${getDrugImage(drug)}" style="max-width:200px;max-height:160px;object-fit:contain;border-radius:8px" onerror="this.style.display='none'">
+      </div>
+      <label>药名</label>
+      <input id="editName" value="${drug.name}">
+      <label>分类</label>
+      <select id="editCat">${ALL_CATEGORIES.map(c=>`<option value="${c}"${drug.cat===c?' selected':''}>${c}</option>`).join('')}<option value="__new__">➕ 新建分类...</option></select>
+      <input id="editNewCat" placeholder="输入新分类名称" style="display:none;margin-top:4px">
+      <label>更换图片 ${hasCustom}</label>
+      <input type="file" id="editImage" accept="image/*" onchange="previewUpload(this,'editPreview')" style="margin-bottom:8px">
+      <label>备注</label>
+      <textarea id="editNotes" rows="2">${drug.notes||''}</textarea>
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn btn-primary" onclick="saveDrug(${id})">保存</button>
+        <button class="btn btn-surface" onclick="document.querySelector('.modal-overlay').remove()">取消</button>
+      </div>
+    </div>
+  </div>`;
+  const div=document.createElement('div');
+  div.innerHTML=html;
+  app.appendChild(div.firstElementChild);
+  // Category change handler
+  setTimeout(()=>{
+    const sel=document.getElementById('editCat');
+    sel.onchange=()=>{
+      document.getElementById('editNewCat').style.display=sel.value==='__new__'?'block':'none';
+    };
+  },100);
+}
+
+async function saveDrug(id){
+  const drug=await dbGet('drugs',id);
+  drug.name=document.getElementById('editName').value;
+  let cat=document.getElementById('editCat').value;
+  if(cat==='__new__'){
+    cat=document.getElementById('editNewCat').value.trim();
+    if(!cat){toast('请输入新分类名称');return;}
+    if(!ALL_CATEGORIES.includes(cat)) ALL_CATEGORIES.push(cat);
+  }
+  drug.cat=cat;
+  drug.notes=document.getElementById('editNotes').value;
+  drug.updatedAt=Date.now();
+  // Handle image upload
+  const fileInput=document.getElementById('editImage');
+  if(fileInput.files[0]){
+    drug.customImage=await fileToBase64(fileInput.files[0]);
+  }
+  await dbPut('drugs',drug);
+  document.querySelector('.modal-overlay').remove();
+  toast('✅ 已保存');
+  renderDrugEditor();
+}
+
+function getDrugImage(drug){
+  if(drug.customImage) return drug.customImage;
+  return drug.id+'.png';
+}
+
+function previewUpload(input,previewId){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=document.getElementById(previewId);
+    if(img){img.src=e.target.result;img.style.display='block';}
+  };
+  reader.readAsDataURL(file);
+}
+
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function showAddDrug(){
+  const maxId=Math.max(...(await dbGetAll('drugs')).map(d=>d.id),128)+1;
+  const html=`
+  <div class="modal-overlay" onclick="if(event.target===this)this.remove()">
+    <div class="modal">
+      <h3>添加新药品</h3>
+      <div style="text-align:center;margin-bottom:12px">
+        <img id="addPreview" src="" style="max-width:200px;max-height:160px;object-fit:contain;border-radius:8px;display:none">
+      </div>
+      <label>编号</label>
+      <input id="addId" type="number" value="${maxId}" placeholder="自动生成">
+      <label>药名</label>
+      <input id="addName" placeholder="药品名称">
+      <label>分类</label>
+      <select id="addCat">${ALL_CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('')}<option value="__new__">➕ 新建分类...</option></select>
+      <input id="addNewCat" placeholder="输入新分类名称" style="display:none;margin-top:4px">
+      <label>上传结构图片</label>
+      <input type="file" id="addImage" accept="image/*" onchange="previewUpload(this,'addPreview')">
+      <div class="btn-row" style="margin-top:12px">
+        <button class="btn btn-primary" onclick="addNewDrug()">添加</button>
+        <button class="btn btn-surface" onclick="document.querySelector('.modal-overlay').remove()">取消</button>
+      </div>
+    </div>
+  </div>`;
+  const div=document.createElement('div');
+  div.innerHTML=html;
+  app.appendChild(div.firstElementChild);
+  setTimeout(()=>{
+    const sel=document.getElementById('addCat');
+    sel.onchange=()=>{
+      document.getElementById('addNewCat').style.display=sel.value==='__new__'?'block':'none';
+    };
+  },100);
+}
+
+async function addNewDrug(){
+  const id=parseInt(document.getElementById('addId').value);
+  const name=document.getElementById('addName').value.trim();
+  let cat=document.getElementById('addCat').value;
+  if(cat==='__new__'){
+    cat=document.getElementById('addNewCat').value.trim();
+    if(!cat){toast('请输入新分类名称');return;}
+    if(!ALL_CATEGORIES.includes(cat)) ALL_CATEGORIES.push(cat);
+  }
+  if(!id||!name){toast('请填写编号和药名');return;}
+  const exists=await dbGet('drugs',id);
+  if(exists&&exists.active!==false){toast('该编号已存在');return;}
+  const newDrug={id,name,cat,active:true,notes:'',createdAt:Date.now()};
+  // Handle image upload
+  const fileInput=document.getElementById('addImage');
+  if(fileInput.files[0]){
+    newDrug.customImage=await fileToBase64(fileInput.files[0]);
+  }
+  await dbPut('drugs',newDrug);
+  document.querySelector('.modal-overlay').remove();
+  toast('✅ 已添加: '+name);
+  renderDrugEditor();
+}
+
+// ========== UTILS ==========
+function toast(msg){
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>{t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(()=>t.remove(),300);},2000);
+}
+
+// ========== NAVIGATION ==========
+nav.addEventListener('click',async e=>{
+  const tab=e.target.closest('.tab');
+  if(!tab) return;
+  const view=tab.dataset.view;
+  showView(view);
+  if(view==='dashboard') await renderDashboard();
+  else if(view==='learn') await renderLearnMenu();
+  else if(view==='browse') await renderBrowse();
+  else if(view==='settings') await renderSettings();
+});
+
+// ========== INIT ==========
+async function init(){
+  try{
+    await openDB();
+    const darkMode=await dbGet('settings','darkMode');
+    if(darkMode?.value==='true') document.body.classList.add('dark');
+    await renderDashboard();
+    await updateDueBadge();
+  }catch(err){
+    app.innerHTML=`<div class="empty-state"><div class="icon">⚠️</div><h3>初始化失败</h3><p style="color:var(--text2);margin-top:8px">请检查浏览器是否支持 IndexedDB<br>或尝试刷新页面</p><p style="font-size:12px;color:var(--text2);margin-top:4px">${err.message}</p></div>`;
+  }
+  // Register SW
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
+}
+
+async function updateDueBadge(){
+  const {total}=await getDueCards(200);
+  const badge=document.getElementById('dueBadge');
+  if(badge){
+    if(total>0){badge.textContent=total>99?'99+':total;badge.style.display='flex';}
+    else{badge.style.display='none';}
+  }
+}
+init();
+
+// Keyboard shortcuts for quality rating
+document.addEventListener('keydown',e=>{
+  if(currentView==='learn'&&studyRevealed){
+    if(e.key==='ArrowLeft'||e.key==='a'){rateQuality(false);}
+    if(e.key==='ArrowRight'||e.key==='d'){rateQuality(true);}
+  }
+  if(e.key===' '&&currentView==='learn'&&!studyRevealed){
+    e.preventDefault();
+    revealAnswer();
+  }
+});
+
+// Handle back button
+window.addEventListener('hashchange',()=>{
+  const v=location.hash.slice(1);
+  if(v&&['dashboard','learn','browse','settings'].includes(v)) showView(v);
+});
+</script>
+</body>
+</html>
