@@ -11,28 +11,45 @@
 <title>药物结构背诵</title>
 <style>
 :root {
-  --bg: #f2f7f5; --surface: #fff; --text: #1a2e2b; --text2: #6b7f7a;
-  --primary: #0d9488; --primary-dark: #0f766e; --primary-light: #e6f7f5;
-  --accent: #6366f1; --accent-light: #eef2ff;
-  --danger: #ef4444; --danger-light: #fef2f2;
-  --success: #10b981; --success-light: #ecfdf5;
-  --warn: #f59e0b; --warn-light: #fffbeb;
-  --border: #e4ece9; --radius: 16px; --radius-sm: 10px;
-  --nav-h: 68px; --font: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',system-ui,sans-serif;
+  --body-bg: linear-gradient(160deg,#e9effb 0%,#ece9f7 45%,#e3ecfa 100%);
+  --bg: #edf1f9; --surface: rgba(255,255,255,0.45);
+  --text: #262d40; --text2: #59627a;
+  --primary: #5b6cf0; --primary-dark: #4a5bd8; --primary-light: #e8ebff;
+  --accent: #8b5cf6; --accent-light: #f1edff;
+  --danger: #ef4444; --danger-light: #feecec;
+  --success: #10b981; --success-light: #e7faf2;
+  --warn: #f59e0b; --warn-light: #fdf4e3;
+  --star: #f5a623;
+  --border: rgba(255,255,255,0.55);
+  --glass-blur: blur(14px) saturate(130%);
+  --shadow: 0 8px 28px rgba(88,104,190,0.10);
+  --shadow-soft: 0 2px 10px rgba(88,104,190,0.06);
+  --radius: 18px; --radius-sm: 12px;
+  --nav-h: 72px; --font: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',system-ui,sans-serif;
 }
 body.dark {
-  --bg: #0c1a17; --surface: #152522; --text: #e2edeb; --text2: #7a918c;
-  --primary: #2dd4bf; --primary-dark: #14b8a6; --primary-light: #0d2e28;
-  --border: #1e3d35;
+  --body-bg: linear-gradient(160deg,#181b2a 0%,#1d1c30 45%,#171b2a 100%);
+  --bg: #1a1f31; --surface: rgba(255,255,255,0.07);
+  --text: #e7eaf4; --text2: #a5abc4;
+  --primary: #8b9bff; --primary-dark: #7184f5; --primary-light: #232a4d;
+  --accent: #a78bfa; --accent-light: #2a2444;
+  --danger: #f87171; --danger-light: #3a2230;
+  --success: #34d399; --success-light: #133a32;
+  --warn: #fbbf24; --warn-light: #3a2f1c;
+  --border: rgba(255,255,255,0.14);
+  --shadow: 0 8px 28px rgba(0,0,0,0.35);
+  --shadow-soft: 0 2px 10px rgba(0,0,0,0.25);
 }
 * { margin:0; padding:0; box-sizing:border-box; }
 html,body { height:100%; overflow:hidden; }
 body {
-  font-family:var(--font); background:var(--bg); color:var(--text);
+  font-family:var(--font); background:var(--body-bg); color:var(--text);
+  background-attachment:fixed;
   display:flex; flex-direction:column; -webkit-tap-highlight-color:transparent;
-  user-select:none; -webkit-user-select:none; font-size:15px; line-height:1.5;
+  user-select:none; -webkit-user-select:none; font-size:15px; line-height:1.55;
+  touch-action:manipulation; /* 禁用双击缩放，连点切换技巧不会放大页面 */
 }
-#app { flex:1; overflow-y:auto; padding:12px 14px calc(var(--nav-h) + 24px); scroll-behavior:smooth; }
+#app { flex:1; overflow-y:auto; padding:20px 18px calc(var(--nav-h) + 40px); scroll-behavior:smooth; margin:0 auto; width:100%; max-width:760px; }
 .view { display:none; }
 .view.active { display:block; animation:fadeUp .25s cubic-bezier(.4,0,.2,1); }
 @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
@@ -44,18 +61,22 @@ body {
 /* Nav */
 nav {
   position:fixed; bottom:0; left:0; right:0; height:var(--nav-h);
-  background:var(--surface); border-top:1px solid var(--border);
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border-top:1px solid var(--border);
+  box-shadow:0 -4px 24px rgba(88,104,190,0.06);
   display:flex; justify-content:space-around; align-items:flex-start;
-  z-index:100; padding:6px 4px env(safe-area-inset-bottom,6px);
+  z-index:100; padding:8px 4px env(safe-area-inset-bottom,8px);
 }
 nav .tab {
   display:flex; flex-direction:column; align-items:center; gap:3px;
   padding:6px 10px; border:none; background:none; color:var(--text2);
   font-size:10px; cursor:pointer; font-family:var(--font); position:relative;
-  transition:all .2s; font-weight:500; border-radius:12px; min-width:56px;
+  transition:all 220ms ease; font-weight:500; border-radius:14px; min-width:56px;
 }
 nav .tab .icon { font-size:22px; line-height:1; transition:transform .2s; }
-nav .tab.active { color:var(--primary); }
+nav .tab:hover { color:var(--text); }
+nav .tab.active { color:var(--primary); background:var(--primary-light); }
 nav .tab.active .icon { transform:translateY(-2px); }
 nav .tab .badge {
   position:absolute; top:2px; left:50%; margin-left:10px;
@@ -66,9 +87,12 @@ nav .tab .badge {
 
 /* Cards */
 .card {
-  background:var(--surface); border-radius:var(--radius); padding:18px;
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border-radius:var(--radius); padding:18px 20px;
   border:1px solid var(--border); margin-bottom:14px;
-  transition:border-color .2s;
+  box-shadow:var(--shadow);
+  transition:border-color .2s, box-shadow .2s;
 }
 .card-header { font-size:15px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
 .card-header .dot { width:8px;height:8px;border-radius:50%;background:var(--primary);flex-shrink:0; }
@@ -76,8 +100,11 @@ nav .tab .badge {
 /* Stats */
 .stats-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:14px; }
 .stat-card {
-  background:var(--surface); border-radius:var(--radius-sm); padding:16px 10px;
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border-radius:var(--radius-sm); padding:16px 10px;
   text-align:center; border:1px solid var(--border);
+  box-shadow:var(--shadow-soft);
 }
 .stat-card .num { font-size:30px; font-weight:800; letter-spacing:-1px; }
 .stat-card .label { font-size:11px; color:var(--text2); margin-top:3px; font-weight:500; }
@@ -89,16 +116,21 @@ nav .tab .badge {
 /* Buttons */
 .btn {
   display:inline-flex; align-items:center; justify-content:center; gap:8px;
-  padding:14px 20px; border-radius:var(--radius-sm); border:none;
-  font-size:15px; font-weight:600; cursor:pointer; transition:all .18s;
+  padding:14px 20px; border-radius:var(--radius-sm);
+  border:1px solid var(--border);
+  font-size:15px; font-weight:600; cursor:pointer; transition:all 220ms ease;
   font-family:var(--font); width:100%; position:relative; overflow:hidden;
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  box-shadow:var(--shadow-soft);
 }
+.btn:hover { transform:translateY(-2px); opacity:.9; box-shadow:var(--shadow); }
 .btn:active { transform:scale(.97); }
-.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary { background:color-mix(in srgb,var(--primary) 85%,transparent); color:#fff; border-color:rgba(255,255,255,0.4); }
 .btn-primary:active { background:var(--primary-dark); }
 .btn-surface { background:var(--surface); color:var(--text); border:1.5px solid var(--border); }
-.btn-accent { background:var(--accent); color:#fff; }
-.btn-danger { background:var(--danger); color:#fff; }
+.btn-accent { background:color-mix(in srgb,var(--accent) 85%,transparent); color:#fff; border-color:rgba(255,255,255,0.4); }
+.btn-danger { background:color-mix(in srgb,var(--danger) 85%,transparent); color:#fff; border-color:rgba(255,255,255,0.4); }
 .btn-sm { padding:8px 16px; font-size:13px; width:auto; }
 .btn-row { display:flex; gap:10px; }
 .btn-row .btn { flex:1; }
@@ -106,24 +138,30 @@ nav .tab .badge {
 /* Mode selector */
 .mode-toggle {
   display:flex; background:var(--bg); border-radius:var(--radius-sm); padding:4px; gap:4px;
+  border:1px solid var(--border);
 }
 .mode-toggle button {
-  flex:1; padding:12px 8px; border:none; border-radius:8px; font-size:14px;
-  font-weight:600; cursor:pointer; transition:all .2s; font-family:var(--font);
+  flex:1; padding:12px 8px; border:none; border-radius:9px; font-size:14px;
+  font-weight:600; cursor:pointer; transition:all 220ms ease; font-family:var(--font);
   background:transparent; color:var(--text2);
 }
-.mode-toggle button.active { background:var(--surface); color:var(--text); }
+.mode-toggle button:hover { background:rgba(255,255,255,0.3); }
+.mode-toggle button.active { background:var(--surface); color:var(--text); box-shadow:var(--shadow-soft); }
 
 /* Flashcard */
 .flashcard-container {
   display:flex; flex-direction:column; align-items:center; gap:16px;
 }
 .flashcard {
-  background:var(--surface); border-radius:var(--radius); border:1.5px solid var(--border);
-  width:100%; max-width:420px; min-height:280px; display:flex;
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border-radius:var(--radius); border:1px solid var(--border);
+  width:100%; max-width:480px; min-height:320px; display:flex;
   align-items:center; justify-content:center; cursor:pointer;
-  position:relative; overflow:hidden; transition:all .2s;
+  position:relative; overflow:hidden; transition:all 220ms ease;
+  box-shadow:var(--shadow);
 }
+.flashcard:hover { box-shadow:0 14px 36px rgba(88,104,190,0.16); }
 .flashcard:active { border-color:var(--primary); }
 .flashcard img { max-width:100%; max-height:300px; object-fit:contain; padding:12px; }
 .flashcard .drug-name {
@@ -134,34 +172,87 @@ nav .tab .badge {
   position:absolute; bottom:10px; right:14px;
   font-size:11px; color:var(--text2); opacity:.5; font-weight:500;
 }
+.flashcard .fav-btn {
+  position:absolute; top:8px; right:12px; z-index:5;
+  background:none; border:none; font-size:26px; cursor:pointer;
+  color:var(--text2); opacity:.55; transition:all 220ms ease;
+  padding:4px; line-height:1;
+}
+.flashcard .fav-btn.on { color:var(--star); opacity:1; }
+.flashcard .fav-btn:hover { transform:scale(1.25); opacity:1; }
+.fav-btn-modal.on { color:var(--star); border-color:var(--star); }
 
 .answer-area {
-  width:100%; max-width:420px; min-height:64px;
+  width:100%; max-width:480px; min-height:64px;
   display:flex; align-items:center; justify-content:center;
-  background:var(--primary-light); border-radius:var(--radius-sm);
-  border:2px dashed var(--primary); font-size:14px; color:var(--text2);
-  cursor:pointer; transition:all .25s; padding:18px; font-weight:500;
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border-radius:var(--radius-sm);
+  border:1.5px dashed var(--primary); font-size:14px; color:var(--text2);
+  cursor:pointer; transition:all 220ms ease; padding:18px; font-weight:500;
 }
+.answer-area:hover { background:rgba(255,255,255,0.6); }
 .answer-area.revealed {
   border-style:solid; border-color:var(--success); background:var(--success-light);
-  color:var(--text); font-size:30px; font-weight:800; animation:popIn .3s;
+  color:var(--text); font-size:14px; font-weight:500; animation:popIn .3s;
 }
+.answer-info .drug-big { font-size:26px; font-weight:800; letter-spacing:1px; }
+.answer-info .drug-cat { font-size:12px; color:var(--primary); font-weight:600; margin-top:4px; }
+.answer-info .drug-note { font-size:13px; color:var(--text2); margin-top:8px; line-height:1.6; }
 
 /* Rate buttons */
-.rate-btns { width:100%; max-width:420px; }
+.rate-btns { width:100%; max-width:480px; }
 .rate-label { text-align:center; font-size:13px; color:var(--text2); margin-bottom:10px; font-weight:500; }
 .rate-row { display:flex; gap:10px; }
 .rate-wrong {
-  flex:1; padding:16px; border-radius:var(--radius-sm); border:2px solid var(--danger);
-  background:var(--danger-light); color:var(--danger); font-size:18px;
-  font-weight:700; cursor:pointer; transition:all .15s; font-family:var(--font);
+  flex:1; padding:16px; border-radius:var(--radius-sm); border:1.5px solid var(--danger);
+  background:color-mix(in srgb,var(--danger-light) 72%,transparent);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  color:var(--danger); font-size:18px;
+  font-weight:700; cursor:pointer; transition:all 220ms ease; font-family:var(--font);
+  box-shadow:var(--shadow-soft);
 }
 .rate-right {
-  flex:1; padding:16px; border-radius:var(--radius-sm); border:2px solid var(--success);
-  background:var(--success-light); color:var(--success); font-size:18px;
-  font-weight:700; cursor:pointer; transition:all .15s; font-family:var(--font);
+  flex:1; padding:16px; border-radius:var(--radius-sm); border:1.5px solid var(--success);
+  background:color-mix(in srgb,var(--success-light) 72%,transparent);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  color:var(--success); font-size:18px;
+  font-weight:700; cursor:pointer; transition:all 220ms ease; font-family:var(--font);
+  box-shadow:var(--shadow-soft);
 }
+.rate-wrong:hover,.rate-right:hover { transform:translateY(-2px); opacity:.9; }
 .rate-wrong:active,.rate-right:active { transform:scale(.95); }
+
+/* Study layout */
+.view.study-layout{
+  display:flex; flex-direction:column; gap:14px;
+  min-height:calc(100vh - var(--nav-h) - 64px);
+  min-height:calc(100dvh - var(--nav-h) - 64px);
+}
+.study-top{ display:flex; align-items:center; gap:12px; }
+.study-title{ flex:1; font-size:14px; font-weight:600; }
+.study-count{ font-size:13px; color:var(--text2); font-variant-numeric:tabular-nums; }
+.study-card-wrap{
+  flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:14px;
+  min-height:220px; padding:6px 0;
+}
+.study-actions{ display:flex; gap:10px; width:100%; max-width:480px; margin:0 auto; }
+.study-actions .btn-rate{ flex:1; padding:14px 4px; font-size:14px; }
+.study-actions .btn-back{ flex:0 0 auto; width:auto; padding:14px 18px; font-size:13px; }
+.study-hint{ text-align:center; font-size:11px; color:var(--text2); margin-top:2px; }
+
+.btn-forget{
+  background:color-mix(in srgb,var(--danger) 12%,transparent);
+  border:1.5px solid color-mix(in srgb,var(--danger) 55%,transparent);
+  color:var(--danger);
+}
+.btn-remember{
+  background:color-mix(in srgb,var(--success) 12%,transparent);
+  border:1.5px solid color-mix(in srgb,var(--success) 55%,transparent);
+  color:var(--success);
+}
+.btn:disabled{ opacity:.4; cursor:default; transform:none; box-shadow:none; }
+.btn:disabled:hover{ opacity:.4; transform:none; }
 
 /* Progress */
 .progress-bar {
@@ -175,24 +266,29 @@ nav .tab .badge {
 }
 .filter-scroll::-webkit-scrollbar{display:none}
 .filter-chip {
-  flex-shrink:0; padding:7px 16px; border-radius:20px; border:1.5px solid var(--border);
-  background:var(--surface); font-size:13px; cursor:pointer; white-space:nowrap;
-  transition:all .2s; font-family:var(--font); color:var(--text); font-weight:500;
+  flex-shrink:0; padding:8px 18px; border-radius:20px; border:1px solid var(--border);
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  font-size:13px; cursor:pointer; white-space:nowrap;
+  transition:all 220ms ease; font-family:var(--font); color:var(--text); font-weight:500;
 }
-.filter-chip.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.filter-chip:hover { transform:translateY(-1px); }
+.filter-chip.active { background:var(--primary); color:#fff; border-color:transparent; box-shadow:var(--shadow-soft); }
 
 .browse-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
 @media(min-width:480px){ .browse-grid{grid-template-columns:repeat(4,1fr)} }
 @media(min-width:768px){ .browse-grid{grid-template-columns:repeat(6,1fr)} }
 .browse-cell {
-  background:var(--surface); border-radius:var(--radius-sm); overflow:hidden;
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border-radius:var(--radius-sm); overflow:hidden;
   border:1px solid var(--border); cursor:pointer; text-align:center;
-  transition:all .15s;
+  transition:all 220ms ease; box-shadow:var(--shadow-soft); position:relative;
 }
+.browse-cell:hover { transform:translateY(-2px); box-shadow:var(--shadow); }
 .browse-cell:active{transform:scale(.96)}
 .browse-cell img{width:100%;aspect-ratio:1;object-fit:contain;padding:10px;background:#fff}
-.browse-cell .name{font-size:11px;padding:6px 4px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.browse-cell .stars{font-size:9px;padding-bottom:6px}
+.browse-cell .name{font-size:11px;padding:8px 4px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* Settings */
 .setting-item {
@@ -203,10 +299,14 @@ nav .tab .badge {
 .setting-item .label{font-size:14px;font-weight:500}
 .stepper{display:flex;align-items:center;gap:6px}
 .stepper button{
-  width:34px;height:34px;border-radius:50%;border:1.5px solid var(--border);
-  background:var(--surface);font-size:18px;cursor:pointer;display:flex;
-  align-items:center;justify-content:center;color:var(--text);transition:all .15s;
+  width:34px;height:34px;border-radius:50%;border:1px solid var(--border);
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  font-size:18px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;color:var(--text);transition:all 220ms ease;
+  box-shadow:var(--shadow-soft);
 }
+.stepper button:hover{transform:translateY(-2px)}
 .stepper button:active{background:var(--primary-light);border-color:var(--primary)}
 .stepper .val{font-size:16px;font-weight:700;min-width:28px;text-align:center}
 
@@ -238,16 +338,20 @@ nav .tab .badge {
   display:flex;align-items:flex-end;justify-content:center;animation:fadeIn .2s;
 }
 .modal{
-  background:var(--surface);border-radius:20px 20px 0 0;width:100%;
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border-radius:20px 20px 0 0;width:100%;
   max-width:500px;max-height:88vh;overflow-y:auto;padding:24px 20px;
+  border:1px solid var(--border);border-bottom:none;
+  box-shadow:0 -8px 30px rgba(88,104,190,0.12);
   animation:slideUp .3s cubic-bezier(.4,0,.2,1);
 }
 .modal h3{margin-bottom:18px;font-size:18px;font-weight:700}
 .modal input,.modal select,.modal textarea{
-  width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border);
-  font-size:14px;margin-bottom:12px;background:var(--bg);color:var(--text);font-family:var(--font);
+  width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);
+  font-size:14px;margin-bottom:12px;background:var(--surface);color:var(--text);font-family:var(--font);
 }
-.modal input:focus,.modal select:focus,.modal textarea:focus{outline:none;border-color:var(--primary)}
+.modal input:focus,.modal select:focus,.modal textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}
 
 /* Summary */
 .summary-card{text-align:center;padding:32px 20px}
@@ -256,10 +360,10 @@ nav .tab .badge {
 
 /* Search */
 .search-input{
-  width:100%;padding:11px 16px;border-radius:24px;border:1.5px solid var(--border);
-  font-size:14px;margin-bottom:12px;background:var(--bg);color:var(--text);font-family:var(--font);
+  width:100%;padding:11px 16px;border-radius:24px;border:1px solid var(--border);
+  font-size:14px;margin-bottom:12px;background:var(--surface);color:var(--text);font-family:var(--font);
 }
-.search-input:focus{outline:none;border-color:var(--primary)}
+.search-input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px color-mix(in srgb,var(--primary) 20%,transparent)}
 
 /* Toast */
 .toast{
@@ -281,16 +385,21 @@ nav .tab .badge {
 
 /* Tip card */
 .tip-card{
-  background:var(--accent-light);border:1px solid #c7d2fe;border-radius:var(--radius);
-  padding:16px;margin-bottom:12px;
+  background:var(--surface);
+  -webkit-backdrop-filter:var(--glass-blur); backdrop-filter:var(--glass-blur);
+  border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;margin-bottom:12px;cursor:pointer;min-height:150px;
+  box-shadow:var(--shadow-soft);transition:box-shadow 220ms ease, transform 220ms ease;
 }
+.tip-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
 .tip-card .tip-title{font-weight:700;font-size:14px;color:var(--accent);margin-bottom:6px}
-.tip-card .tip-body{font-size:13px;color:var(--text);line-height:1.6}
+.tip-card .tip-body{font-size:13px;color:var(--text);line-height:1.7}
 
 /* Desktop */
 @media(min-width:768px){
-  #app{max-width:640px;margin:0 auto;padding-top:24px}
-  nav{max-width:640px;left:50%;transform:translateX(-50%);border-radius:20px 20px 0 0}
+  #app{max-width:760px;padding-top:32px;padding-bottom:calc(var(--nav-h) + 56px)}
+  nav{max-width:560px;left:50%;transform:translateX(-50%);border-radius:24px 24px 0 0;border-left:1px solid var(--border);border-right:1px solid var(--border)}
+  .flashcard{min-height:340px}
 }
 </style>
 </head>
@@ -439,6 +548,138 @@ const DRUG_DATA = [
 
 let ALL_CATEGORIES = [...new Set(DRUG_DATA.map(d=>d.cat))].sort();
 
+// 药理作用/笔记（一句话），可在"编辑药品"中自定义覆盖
+const NOTE_MAP={
+  1:'苯二氮䓬类镇静催眠药，增强GABA能神经传递，抗焦虑、镇静催眠、抗惊厥',
+  2:'巴比妥类镇静催眠药，增强GABA-A受体作用，镇静催眠、抗癫痫',
+  3:'第一代抗精神病药，阻断多巴胺D2受体，治疗精神分裂症、镇吐',
+  4:'SSRIs类抗抑郁药，选择性抑制5-HT再摄取',
+  5:'阿片类镇痛药，激动μ受体，强效镇痛',
+  6:'阿片类强效镇痛药，激动μ受体，镇痛、镇静',
+  7:'阿片类中枢镇咳药（甲基吗啡），镇咳、镇痛',
+  8:'抗帕金森药，多巴胺前体，透过血脑屏障补充多巴胺',
+  9:'抗胆碱药，阻断M受体，解痉、散瞳、抑制腺体分泌，解救有机磷中毒',
+  10:'拟胆碱药，激动M受体，缩瞳降眼压，治疗青光眼',
+  11:'拟肾上腺素药，激动α、β受体，抢救休克、心脏骤停，平喘',
+  12:'非选择性β受体阻断剂，降压、抗心绞痛、抗心律失常',
+  13:'H1受体阻断剂，抗过敏、止晕、镇静',
+  14:'H1受体阻断剂，抗过敏，治疗荨麻疹、过敏性鼻炎',
+  15:'酯类局麻药，局部麻醉',
+  16:'酰胺类局麻药，局麻及抗室性心律失常',
+  17:'二氢吡啶类钙通道阻滞剂，降压、抗心绞痛',
+  18:'非二氢吡啶类钙通道阻滞剂，抗心律失常、降压、抗心绞痛',
+  19:'非二氢吡啶类钙通道阻滞剂，抗心绞痛、降压',
+  20:'Ia类抗心律失常药，治疗室性心律失常',
+  21:'硝酸酯类抗心绞痛药，扩张静脉及冠脉，缓解心绞痛',
+  22:'III类抗心律失常药，广谱抗心律失常',
+  23:'ACEI类降压药，抑制血管紧张素转化酶，降压、保护心脏',
+  24:'AT1受体阻断剂（ARB）类降压药',
+  25:'HMG-CoA还原酶抑制剂，降低血脂',
+  26:'强心苷类强心药，正性肌力，治疗心衰、房颤',
+  27:'抗血小板药，抑制ADP受体，防治血栓',
+  28:'H2受体阻断剂，抑制胃酸分泌，治疗消化性溃疡',
+  29:'质子泵抑制剂（PPI），抑制胃酸分泌，治疗溃疡',
+  30:'NSAIDs，解热镇痛抗炎、抗血小板聚集',
+  31:'NSAIDs，解热镇痛，无抗炎作用',
+  32:'阿司匹林与对乙酰氨基酚的酯化产物，解热镇痛抗炎',
+  33:'NSAIDs，强效抗炎镇痛',
+  34:'NSAIDs，解热镇痛抗炎',
+  35:'促尿酸排泄药，治疗痛风',
+  36:'抗肿瘤抗代谢药，抑制胸苷酸合成酶',
+  37:'抗叶酸代谢抗肿瘤药，抑制二氢叶酸还原酶',
+  38:'拓扑异构酶I抑制剂抗肿瘤药',
+  39:'β-内酰胺类抗生素，抑制细菌细胞壁合成',
+  40:'第一代头孢菌素，β-内酰胺类抗生素',
+  41:'四环素类抗生素，抑制细菌蛋白质合成',
+  42:'广谱抗生素，抑制细菌蛋白质合成，治疗伤寒等',
+  43:'喹诺酮类抗菌药，抑制细菌DNA回旋酶',
+  44:'喹诺酮类抗菌药，治疗泌尿道、肠道感染',
+  45:'喹诺酮类广谱抗菌药',
+  46:'喹诺酮类广谱抗菌药',
+  47:'一线抗结核药，抑制结核分枝杆菌细胞壁合成',
+  48:'抗结核药（二线）',
+  49:'一线抗结核药',
+  50:'磺胺类抗菌药，抑制二氢蝶酸合成酶',
+  51:'磺胺类抗菌药，常与甲氧苄啶（TMP）联用',
+  52:'抗菌增效剂，抑制二氢叶酸还原酶，常与磺胺联用',
+  53:'唑类抗真菌药，抑制羊毛甾醇14α-脱甲基酶',
+  54:'烯丙胺类抗真菌药，抑制角鲨烯环氧化酶',
+  55:'广谱抗病毒药',
+  56:'NRTI类抗HIV药，抑制逆转录酶',
+  57:'NNRTI类抗HIV药，抑制逆转录酶',
+  58:'NNRTI类抗HIV药，抑制逆转录酶',
+  59:'神经氨酸酶抑制剂，抗流感病毒',
+  60:'抗流感病毒药，也用于帕金森病',
+  61:'NS5B聚合酶抑制剂，抗HCV（丙肝）病毒',
+  62:'蛋白酶抑制剂，抗HIV药',
+  63:'抗疟药，含过氧桥结构',
+  64:'磺脲类口服降糖药，促进胰岛素分泌',
+  65:'磺脲类口服降糖药，促进胰岛素分泌',
+  66:'格列奈类非磺脲促胰岛素分泌剂',
+  67:'双胍类口服降糖药，改善胰岛素抵抗',
+  68:'噻唑烷二酮类胰岛素增敏剂',
+  69:'袢利尿药，抑制Na-K-2Cl同向转运体',
+  70:'噻嗪类利尿药，降压、利尿',
+  71:'醛固酮受体拮抗剂，保钾利尿',
+  72:'长效糖皮质激素，抗炎、抗过敏、免疫抑制',
+  73:'雌激素',
+  74:'孕激素',
+  75:'雄激素',
+  76:'蛋白同化激素',
+  77:'维生素C（抗坏血酸），抗氧化、促进胶原合成',
+  78:'维生素A（视黄醇），维持视觉与上皮组织',
+  79:'第一代抗精神病药，阻断D2受体',
+  80:'磺脲类口服降糖药，促进胰岛素分泌',
+  81:'磺脲类口服降糖药，促进胰岛素分泌',
+  82:'非典型抗精神病药',
+  83:'抗癫痫药，阻断钠通道',
+  84:'β2受体激动剂，舒张支气管，平喘',
+  85:'烷化剂抗肿瘤药',
+  86:'中枢兴奋药，腺苷受体拮抗剂',
+  87:'PDE3抑制剂，正性肌力、扩血管',
+  88:'第二代H1受体阻断剂，抗过敏',
+  89:'抗癫痫药，阻断钠通道',
+  90:'阿片类镇痛药，也用于阿片依赖维持治疗',
+  91:'抗胆碱药，镇静、防晕动病',
+  92:'抗胆碱药，解痉、改善微循环',
+  93:'Ia类抗心律失常药',
+  94:'广谱青霉素类抗生素',
+  95:'烷化剂抗肿瘤药',
+  96:'烷化剂抗肿瘤药，治疗慢性粒细胞白血病',
+  97:'亚硝脲类烷化剂抗肿瘤药，可透过血脑屏障',
+  98:'核苷类抗疱疹病毒药',
+  99:'调节睡眠节律的激素',
+  100:'褪黑素受体激动剂，治疗失眠',
+  101:'NSAIDs，强效抗炎镇痛',
+  102:'拟胆碱药，激动M受体，治疗青光眼',
+  103:'胆碱酯酶复活剂，解救有机磷中毒',
+  104:'中枢抗胆碱药，治疗帕金森病',
+  105:'格列奈类非磺脲促胰岛素分泌剂',
+  106:'抗肿瘤抗代谢药，治疗白血病',
+  107:'拟肾上腺素药，平喘、升压、减轻鼻塞',
+  108:'非苯二氮䓬类镇静催眠药',
+  109:'非苯二氮䓬类镇静催眠药',
+  110:'强效阿片类镇痛药',
+  111:'质子泵抑制剂（PPI），抑制胃酸分泌',
+  112:'β-内酰胺酶抑制剂，常与阿莫西林联用',
+  113:'中枢α2受体激动剂，降压药',
+  114:'抗肿瘤抗代谢药，治疗白血病',
+  115:'促尿酸排泄药，治疗痛风',
+  116:'非苯二氮䓬类镇静催眠药',
+  117:'贝特类调脂药，降低甘油三酯',
+  118:'5-HT3受体拮抗剂，止吐',
+  119:'整合酶抑制剂，抗HIV药',
+  120:'非典型抗精神病药',
+  121:'选择性β1受体阻断剂，降压、抗心绞痛',
+  122:'外周多巴胺D2受体拮抗剂，促胃动力、止吐',
+  123:'碳酸酐酶抑制剂，利尿、降眼压',
+  124:'胆碱酯酶抑制剂，治疗重症肌无力',
+  125:'Ic类抗心律失常药',
+  126:'贝特类调脂药',
+  127:'质子泵抑制剂（PPI），抑制胃酸分泌',
+  128:'NSAIDs，长效抗炎镇痛'
+};
+
 // ========== INDEXEDDB ==========
 const DB_NAME='drugFlashcard', DB_VER=1;
 let db;
@@ -478,7 +719,7 @@ async function seedIfNeeded(){
   if(count===0){
     const tx=db.transaction('drugs','readwrite');
     const store=tx.objectStore('drugs');
-    DRUG_DATA.forEach(d=>store.add({...d,active:true,notes:''}));
+    DRUG_DATA.forEach(d=>store.add({...d,active:true,note:NOTE_MAP[d.id]||'',notes:''}));
     await new Promise(r=>{tx.oncomplete=r;});
   }
   // Init default settings
@@ -507,8 +748,11 @@ function dbGetAllByIndex(store,index,query){
 }
 
 // ========== SRS ENGINE ==========
-const LEARNING_STEPS=[1,10,60,1440,2880,5760,10080,20160,43200]; // minutes
-const GRADUATED_INTERVALS=[1,2,4,7,15,30,60,120]; // days
+// 按"日期"排期：今天学的卡今天不再复习，从第二天开始，间隔随复习次数递增（艾宾浩斯曲线）
+const DAY_MS=86400000;
+const LEARNING_STEPS=[1,2,4,7,15,30,60,120]; // 学习阶段间隔（天）
+const GRADUATED_INTERVALS=[2,4,7,15,30,60,120]; // 毕业初始间隔（天）
+function startOfDay(ts){const d=new Date(ts);d.setHours(0,0,0,0);return d.getTime();}
 
 function calcNextReview(progress,quality){
   const p={...progress};
@@ -521,12 +765,12 @@ function calcNextReview(progress,quality){
   p.lastQuality=quality;
 
   if(quality<3){
-    // Failed - reset
+    // Failed - reset to tomorrow
     p.stage=0;
     p.step=0;
-    p.interval=LEARNING_STEPS[0];
+    p.interval=1;
     p.easeFactor=Math.max(1.3,(p.easeFactor||2.5)-0.2);
-    p.nextReview=now+p.interval*60000;
+    p.nextReview=startOfDay(now)+DAY_MS;
     return p;
   }
 
@@ -540,14 +784,15 @@ function calcNextReview(progress,quality){
       p.stage=LEARNING_STEPS.length; // Graduated
       p.interval=Math.round(GRADUATED_INTERVALS[0]*p.easeFactor);
     }else{
-      p.interval=LEARNING_STEPS[p.step];
+      // 首次复习间隔1天（明天），之后按艾宾浩斯递增 2、4、7、15、30、60...
+      p.interval=LEARNING_STEPS[p.step-1];
     }
   }else{
     // Graduated phase
     p.interval=Math.round(p.interval*p.easeFactor);
   }
   p.interval=Math.min(365,Math.max(1,p.interval));
-  p.nextReview=now+p.interval*60000;
+  p.nextReview=startOfDay(now)+p.interval*DAY_MS;
   return p;
 }
 
@@ -556,6 +801,14 @@ async function getDueCards(limit=50){
   const all=await dbGetAll('progress');
   const due=all.filter(p=>p.nextReview&&p.nextReview<=now).sort((a,b)=>a.nextReview-b.nextReview);
   return {cards:due.slice(0,limit),total:due.length};
+}
+
+// 明日待复习数：明天（0点-24点）到期的卡片数，今天学的明天就能在这里看到
+async function getTomorrowCount(){
+  const all=await dbGetAll('progress');
+  const tomorrowStart=startOfDay(Date.now())+DAY_MS;
+  const dayAfter=tomorrowStart+DAY_MS;
+  return all.filter(p=>p.nextReview&&p.nextReview>=tomorrowStart&&p.nextReview<dayAfter).length;
 }
 
 async function getNewCards(limit=10){
@@ -571,6 +824,7 @@ async function getNewCards(limit=10){
 // ========== APP STATE ==========
 let currentView='dashboard';
 let studyCards=[], studyIndex=0, studyDirection='i2n', studyRevealed=false;
+let studySessionType='new'; // 'new'=学习新卡  'review'=复习
 let browseFilter='全部';
 
 // ========== VIEW RENDERING ==========
@@ -590,12 +844,14 @@ function showView(name){
 
 async function renderDashboard(){
   const due=await getDueCards();
+  const tomorrowCount=await getTomorrowCount();
   const allProgress=await dbGetAll('progress');
   const allDrugs=await dbGetAll('drugs');
   const activeDrugs=allDrugs.filter(d=>d.active!==false);
   const studied=allProgress.filter(p=>p.totalReviews>0);
   const graduated=allProgress.filter(p=>p.stage>=LEARNING_STEPS.length);
   const streak=await calcStreak();
+  const dailyNew=parseInt((await dbGet('settings','dailyNewCards'))?.value||'10');
 
   // Today's session
   const today=new Date().toISOString().slice(0,10);
@@ -606,8 +862,8 @@ async function renderDashboard(){
   app.innerHTML=`
   <div id="view-dashboard" class="view active">
 
-  <div style="font-size:18px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px">
-    <span style="font-size:22px">🏠</span>仪表盘
+  <div style="font-size:18px;font-weight:800;margin-bottom:14px">
+    仪表盘
   </div>
 
   <div class="card">
@@ -615,13 +871,13 @@ async function renderDashboard(){
     <div class="stats-row">
       <div class="stat-card warn"><div class="num">${streak}</div><div class="label">🔥 连续打卡</div></div>
       <div class="stat-card primary"><div class="num">${studied.length}</div><div class="label">已学习</div></div>
-      <div class="stat-card danger"><div class="num">${due.total}</div><div class="label">待复习</div></div>
+      <div class="stat-card danger"><div class="num">${tomorrowCount}</div><div class="label">明日待复习</div></div>
     </div>
     ${todayLogs.length>0?`
     <div style="display:flex;gap:16px;font-size:13px;padding:8px 0;border-top:1px solid var(--border)">
-      <span style="color:var(--success)">✅ ${todayLogs.filter(l=>l.quality>=3).length} 正确</span>
-      <span style="color:var(--danger)">❌ ${todayLogs.filter(l=>l.quality<3).length} 错误</span>
-      <span style="color:var(--text2)">📖 共${todayLogs.length}次</span>
+      <span style="color:var(--success)">${todayLogs.filter(l=>l.quality>=3).length} 正确</span>
+      <span style="color:var(--danger)">${todayLogs.filter(l=>l.quality<3).length} 错误</span>
+      <span style="color:var(--text2)">共${todayLogs.length}次</span>
     </div>`:''}
   </div>
 
@@ -647,14 +903,26 @@ async function renderDashboard(){
   </div>
 
   <button class="btn btn-primary" onclick="startNewLearning()" style="margin-bottom:10px">
-    📖 学习新卡片 (今日${todayLogs.filter(l=>l.isNew).length||0}/10)
+    📖 学习新卡片 (今日${todayLogs.filter(l=>l.isNew).length||0}/${dailyNew})
   </button>
   <button class="btn btn-accent" onclick="startReview()" style="margin-bottom:10px">
-    🔄 开始复习 ${due.total>0?`(${Math.min(due.total,50)}张待复习)`:'(已全部完成 ✅)'}
+    🔄 开始复习 ${due.total>0?`(${Math.min(due.total,50)}张)`:'(今日已全部完成 ✅)'}
   </button>
   <button class="btn btn-surface" onclick="showView('browse');renderBrowse();">
     🔍 快速浏览全部结构
   </button>
+
+  <!-- 版权与免责声明 -->
+  <div style="margin-top:30px;border-top:1px solid var(--border);padding-top:12px;text-align:center">
+    <div id="disclaimerToggle" onclick="toggleDisclaimer()" style="font-size:12px;color:var(--text2);cursor:pointer;padding:6px;opacity:.8">MMa · 版权与免责声明</div>
+    <div id="disclaimerBody" style="display:none;text-align:left;margin-top:10px;font-size:12px;color:var(--text2);line-height:1.8">
+      <h4 style="font-size:13px;color:var(--text);margin-bottom:8px">知识产权与免责声明</h4>
+      <p style="margin-bottom:6px">本网页为个人学习研究工具，完全免费，不用于任何商业用途。</p>
+      <p style="margin-bottom:6px">所有化学结构式图像均由作者本人手绘创作，受著作权保护，未经许可禁止二次商用转载。网页代码由AI辅助生成，经作者审核修改。</p>
+      <p style="margin-bottom:6px"><strong style="color:var(--warn)">重要：本工具仅用于药物化学知识记忆学习，不构成任何医疗建议、用药指导。药品使用请严格遵循药典、官方药品说明书以及执业医师、药师指导，请勿依据本页面自行用药。</strong></p>
+      <p>使用者使用本工具产生的一切风险由使用者自行承担。</p>
+    </div>
+  </div>
   </div>`;
 }
 
@@ -667,6 +935,16 @@ function setMode(mode){
       b.classList.add('active');
     }
   });
+}
+
+// 版权与免责声明：直接切换 DOM，避免整页重渲染导致滚动位置丢失
+function toggleDisclaimer(){
+  const body=document.getElementById('disclaimerBody');
+  const toggle=document.getElementById('disclaimerToggle');
+  if(!body) return;
+  const show=body.style.display==='none';
+  body.style.display=show?'block':'none';
+  if(toggle) toggle.textContent=show?'收起版权与免责声明':'MMa · 版权与免责声明';
 }
 
 async function calcStreak(){
@@ -688,6 +966,13 @@ async function calcStreak(){
   return streak;
 }
 function yesterday(){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().slice(0,10);}
+
+// 14天折线图：点击/悬停圆点查看该日复习量
+function showDayInfo(i){
+  const d=(window._dayBars||[])[i];
+  const el=document.getElementById('chartInfo');
+  if(el&&d) el.textContent=`${d.label} · 复习 ${d.count||0} 次`;
+}
 
 // ========== NEW LEARNING ==========
 async function renderLearnMenu(){
@@ -724,8 +1009,27 @@ async function renderLearnMenu(){
   });
   const maxDay=Math.max(1,...Object.values(dayMap));
   const dayBars=Object.entries(dayMap).map(([date,count])=>({
-    date,count,pct:Math.round(count/maxDay*100),label:date.slice(5)
+    date,count,pct:Math.round(count/maxDay*100),label:date.slice(5).replace(/^0/,'').replace(/-0/,'-')
   }));
+
+  // 14-day line chart (SVG)
+  window._dayBars=dayBars;
+  const CW=560, CH=180, PAD_L=26, PAD_R=8, PAD_T=14, PAD_B=24;
+  const plotW=CW-PAD_L-PAD_R, plotH=CH-PAD_T-PAD_B;
+  const n=dayBars.length, step=plotW/(n-1);
+  const chartPts=dayBars.map((d,i)=>({
+    x:Math.round(PAD_L+i*step), y:Math.round(PAD_T+plotH-(d.count/maxDay)*plotH), d
+  }));
+  const chartLine=chartPts.map(p=>`${p.x},${p.y}`).join(' ');
+  const plotBottom=PAD_T+plotH;
+  const yTicks=[0,Math.max(1,Math.round(maxDay/2)),maxDay].filter((v,i,a)=>a.indexOf(v)===i);
+  const chartGrid=yTicks.map(t=>{
+    const y=PAD_T+plotH-(t/maxDay)*plotH;
+    return `<line x1="${PAD_L}" y1="${y}" x2="${CW-PAD_R}" y2="${y}" stroke="var(--border)" stroke-width="1"/>
+      <text x="${PAD_L-6}" y="${y+3}" text-anchor="end" font-size="9" fill="var(--text2)">${t}</text>`;
+  }).join('');
+  const chartXLabels=dayBars.map((d,i)=>`<text x="${chartPts[i].x}" y="${CH-6}" text-anchor="middle" font-size="8" fill="var(--text2)" transform="rotate(-45 ${chartPts[i].x} ${CH-6})">${d.label}</text>`).join('');
+  const chartDots=chartPts.map((p,i)=>`<circle cx="${p.x}" cy="${p.y}" r="4" fill="var(--primary)" stroke="var(--surface)" stroke-width="2" onclick="showDayInfo(${i})" onmouseenter="showDayInfo(${i})" style="cursor:pointer"/>`).join('');
 
   // Overall stats
   const totalReviews=allProgress.reduce((s,p)=>s+(p.totalReviews||0),0);
@@ -735,19 +1039,25 @@ async function renderLearnMenu(){
 
   // Tips
   const tips=[
-    {icon:'💡',title:'联想记忆法',body:'将药物结构与药名建立联系。如"苯二氮䓬类"（地西泮）含有一个七元二氮环，形似"西"字的偏旁结构。'},
-    {icon:'📐',title:'骨架识别',body:'先记核心骨架再记取代基。β-内酰胺类（青霉素、头孢）都有四元β-内酰胺环；喹诺酮类都有4-喹诺酮母核。'},
-    {icon:'🔬',title:'SAR联想',body:'构效关系帮助记忆。磺胺类的对氨基苯磺酰胺是必需基团；PPI类的苯并咪唑+吡啶是活性关键。'},
-    {icon:'📝',title:'对比记忆',body:'相似结构对比着记。奥美拉唑/泮托拉唑/兰索拉唑都是苯并咪唑类PPI，区别在取代基。普萘洛尔/美托洛尔都是芳氧丙醇胺类β阻断剂。'},
-    {icon:'🔄',title:'间隔重复',body:`你已经背诵了 ${learning+mastered} 个结构，其中 ${mastered} 个已进入长期记忆。坚持每天复习，记忆更牢固。`},
+    {title:'联想记忆法',body:'将药物结构与药名建立联系。如"苯二氮䓬类"（地西泮）含有一个七元二氮环，形似"西"字的偏旁结构。'},
+    {title:'骨架识别',body:'先记核心骨架再记取代基。β-内酰胺类（青霉素、头孢）都有四元β-内酰胺环；喹诺酮类都有4-喹诺酮母核。'},
+    {title:'SAR联想',body:'构效关系帮助记忆。磺胺类的对氨基苯磺酰胺是必需基团；PPI类的苯并咪唑+吡啶是活性关键。'},
+    {title:'对比记忆',body:'相似结构对比着记。奥美拉唑/泮托拉唑/兰索拉唑都是苯并咪唑类PPI，区别在取代基。普萘洛尔/美托洛尔都是芳氧丙醇胺类β阻断剂。'},
+    {title:'母核定位',body:'先认母核再找差异。四环素类都是四个稠环体系；大环内酯类（红霉素、阿奇霉素）都有大环内酯环，记住"大环+糖基"就抓住了骨架。'},
+    {title:'词根拆分',body:'把长药名拆成词根记。"-他汀"（-statin）是 HMG-CoA 还原酶抑制剂的后缀，阿托伐他汀、瑞舒伐他汀、辛伐他汀共用一个记忆锚点。'},
+    {title:'易混辨析',body:'把相似的药放一起对比。地西泮 vs 氯硝西泮：后者苯环邻位多一个氯、7位由氯换成硝基，记住"氯硝=硝基"就分清了。'},
+    {title:'结构特征',body:'数环数、找杂原子。头孢类都是四元β-内酰胺并六元二氢噻嗪环；喹诺酮类都有4-喹诺酮母核+3位羧基，看骨架就能归大类。'},
+    {title:'故事联想',body:'给结构编个故事。氢氯噻嗪名字里有"噻"（含硫的噻嗪环）和"嗪"，记住"硫+嗪=噻嗪类利尿药"，骨架就不容易忘。'},
+    {title:'自测复习',body:'看完一张卡先遮住答案自测，5分钟后、24小时后各复习一次，比连续反复看十遍记得牢。间隔重复（SM-2）正是按这个规律排期的。'},
+    {title:'间隔重复',body:`你已经背诵了 ${learning+mastered} 个结构，其中 ${mastered} 个已进入长期记忆。坚持每天复习，记忆更牢固。`},
   ];
   const randomTip=tips[Math.floor(Math.random()*tips.length)];
 
   app.innerHTML=`
   <div id="view-learn" class="view active">
 
-  <div style="font-size:18px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px">
-    <span style="font-size:22px">📊</span>学习分析
+  <div style="font-size:18px;font-weight:800;margin-bottom:14px">
+    学习分析
   </div>
 
   <!-- Overall -->
@@ -777,15 +1087,14 @@ async function renderLearnMenu(){
   <!-- 14-day activity -->
   <div class="card">
     <div class="card-header"><span class="dot"></span>近14天学习量</div>
-    <div style="display:flex;align-items:flex-end;gap:4px;height:80px;padding:4px 0">
-      ${dayBars.map(d=>`
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
-          <div style="font-size:9px;color:var(--text2)">${d.count||''}</div>
-          <div style="width:100%;background:${d.count>0?'var(--primary)':'var(--border)'};border-radius:3px 3px 0 0;height:${Math.max(4,d.pct)}%"></div>
-          <div style="font-size:8px;color:var(--text2);transform:rotate(-45deg);white-space:nowrap">${d.label}</div>
-        </div>
-      `).join('')}
-    </div>
+    <svg viewBox="0 0 ${CW} ${CH}" style="width:100%;height:auto;display:block;overflow:visible" role="img" aria-label="近14天学习量折线图">
+      ${chartGrid}
+      <polygon points="${PAD_L},${plotBottom} ${chartLine} ${chartPts[n-1].x},${plotBottom}" fill="var(--primary)" opacity="0.10"/>
+      <polyline points="${chartLine}" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+      ${chartDots}
+      ${chartXLabels}
+    </svg>
+    <div id="chartInfo" style="font-size:11px;color:var(--text2);margin-top:6px;min-height:16px">共 14 天 · 点击圆点查看每日复习量</div>
   </div>
 
   <!-- Weakest cards -->
@@ -804,7 +1113,7 @@ async function renderLearnMenu(){
 
   <!-- Tips -->
   <div class="tip-card" id="tipCard" onclick="nextTip()">
-    <div class="tip-title">${randomTip.icon} ${randomTip.title}</div>
+    <div class="tip-title">${randomTip.title}</div>
     <div class="tip-body">${randomTip.body}</div>
     <div style="font-size:10px;color:var(--text2);margin-top:8px">点击切换技巧 →</div>
   </div>
@@ -820,7 +1129,7 @@ function nextTip(){
   const t=tips[window._tipIndex];
   const card=document.getElementById('tipCard');
   if(card) card.innerHTML=`
-    <div class="tip-title">${t.icon} ${t.title}</div>
+    <div class="tip-title">${t.title}</div>
     <div class="tip-body">${t.body}</div>
     <div style="font-size:10px;color:var(--text2);margin-top:8px">点击切换技巧 →</div>`;
 }
@@ -835,6 +1144,7 @@ async function startNewLearning(){
   studyCards=cards;
   studyIndex=0;
   studyRevealed=false;
+  studySessionType='new';
   showView('learn');
   renderStudyCard();
 }
@@ -852,6 +1162,7 @@ async function startReview(){
   studyCards=cards.map(p=>({...p,drug:drugMap[p.drugId]||drugMap[p.id]}));
   studyIndex=0;
   studyRevealed=false;
+  studySessionType='review';
   showView('learn');
   renderStudyCard();
 }
@@ -869,18 +1180,21 @@ function renderStudyCard(){
   studyRevealed=false;
 
   app.innerHTML=`
-  <div id="view-learn" class="view active">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
-      <button class="btn btn-sm btn-surface" onclick="showView('dashboard');renderDashboard();">←</button>
-      <div style="flex:1;font-size:14px;font-weight:600">${isReview?'复习':'新学习'} · ${dirLabel}</div>
-      <div style="font-size:13px;color:var(--text2)">${studyIndex+1}/${total}</div>
+  <div id="view-learn" class="view active study-layout">
+    <!-- 顶部：返回 + 模式 + 进度 -->
+    <div class="study-top">
+      <button class="btn btn-sm btn-surface" onclick="showView('dashboard');renderDashboard();" aria-label="返回">←</button>
+      <div class="study-title">${isReview?'复习':'新学习'} · ${dirLabel}</div>
+      <div class="study-count">${studyIndex+1} / ${total}</div>
     </div>
     <div class="progress-bar"><div class="fill" style="width:${Math.round((studyIndex+1)/total*100)}%"></div></div>
 
-    <div class="flashcard-container">
+    <!-- 居中主卡 -->
+    <div class="study-card-wrap">
       <div class="flashcard" id="flashcard" onclick="revealAnswer()">
+        <button class="fav-btn${drug.favorite?' on':''}" onclick="event.stopPropagation();toggleFavorite(${drug.id},this,false)" aria-label="收藏">${drug.favorite?'★':'☆'}</button>
         ${studyDirection==='i2n'?`
-          <img src="${getDrugImage(drug)}" alt="结构图" onerror="this.parentElement.innerHTML='<div style=color:var(--text2)>图片加载失败</div>'">
+          <img src="${getDrugImage(drug)}" alt="结构图" onerror="this.outerHTML='<div style=\'color:var(--text2);font-size:14px;padding:12px\'>图片加载失败</div>'">
           <div class="reveal-hint">点击查看药名 →</div>
         `:`
           <div class="drug-name">${drug.name}</div>
@@ -891,18 +1205,27 @@ function renderStudyCard(){
       <div class="answer-area" id="answerArea" onclick="revealAnswer()">
         ${studyDirection==='i2n'?'点击此处显示药名':'点击此处显示结构图'}
       </div>
-
-      <div id="qualitySection" style="display:none;width:100%;max-width:420px;">
-        <div class="rate-label">你答对了吗？</div>
-        <div class="rate-row">
-          <button class="rate-wrong" onclick="rateQuality(false)">✗ 不认识</button>
-          <button class="rate-right" onclick="rateQuality(true)">✓ 认识</button>
-        </div>
-        <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text2)">← 不认识 · 认识 → (键盘方向键)</div>
-      </div>
     </div>
+
+    <!-- 底部操作按钮组 -->
+    <div class="study-actions">
+      <button class="btn btn-surface btn-back" onclick="prevCard()" ${studyIndex===0?'disabled':''} aria-label="返回上一张重新选择">‹ 上一张</button>
+      <button class="btn btn-forget btn-rate" id="btnForget" onclick="rateQuality(false)" disabled>忘记了</button>
+      <button class="btn btn-remember btn-rate" id="btnRemember" onclick="rateQuality(true)" disabled>记住了</button>
+    </div>
+    <div class="study-hint">"忘记了 / 记住了"即翻到下一张 · "上一张"可返回重新选择</div>
   </div>`;
 }
+
+// 上一张 / 下一张：在本次会话内切换，不改变评分进度
+function gotoCard(idx){
+  if(idx<0||idx>=studyCards.length) return;
+  studyIndex=idx;
+  studyRevealed=false;
+  renderStudyCard();
+}
+function prevCard(){ gotoCard(studyIndex-1); }
+function nextCard(){ gotoCard(studyIndex+1); }
 
 function revealAnswer(){
   if(studyRevealed) return;
@@ -911,16 +1234,29 @@ function revealAnswer(){
   const drug=card.drug||card;
   const area=document.getElementById('answerArea');
   const fc=document.getElementById('flashcard');
+  const note=getNote(drug);
 
   if(studyDirection==='i2n'){
-    area.innerHTML=`<span style="font-size:28px;font-weight:700;animation:flipIn .35s">${drug.name}</span>`;
+    area.innerHTML=`
+      <div class="answer-info" style="animation:flipIn .35s">
+        <div class="drug-big">${drug.name}</div>
+        <div class="drug-cat">分类：${drug.cat}</div>
+        ${note?`<div class="drug-note">${note}</div>`:''}
+      </div>`;
     area.classList.add('revealed');
     fc.style.opacity='0.6';
   }else{
-    area.innerHTML=`<img src="${getDrugImage(drug)}" style="max-width:100%;max-height:260px;object-fit:contain;animation:flipIn .35s">`;
+    area.innerHTML=`
+      <div style="text-align:center;animation:flipIn .35s">
+        <img src="${getDrugImage(drug)}" style="max-width:100%;max-height:230px;object-fit:contain">
+        ${note?`<div class="drug-note" style="margin-top:6px">${note}</div>`:''}
+      </div>`;
     area.classList.add('revealed');
   }
-  document.getElementById('qualitySection').style.display='block';
+  const bf=document.getElementById('btnForget');
+  const br=document.getElementById('btnRemember');
+  if(bf) bf.disabled=false;
+  if(br) br.disabled=false;
 }
 
 async function rateQuality(correct){
@@ -933,7 +1269,7 @@ async function rateQuality(correct){
   // Get or init progress
   let progress=await dbGet('progress',drugId);
   if(!progress){
-    progress={drugId,stage:0,step:0,easeFactor:2.5,interval:LEARNING_STEPS[0],repetitions:0,streak:0,totalReviews:0,totalCorrect:0,totalIncorrect:0,nextReview:Date.now()+LEARNING_STEPS[0]*60000};
+    progress={drugId,stage:0,step:0,easeFactor:2.5,interval:1,repetitions:0,streak:0,totalReviews:0,totalCorrect:0,totalIncorrect:0,nextReview:startOfDay(Date.now())+DAY_MS};
   }
   const updated=calcNextReview(progress,quality);
   await dbPut('progress',updated);
@@ -952,15 +1288,19 @@ async function rateQuality(correct){
 }
 
 function renderStudySummary(){
-  const correct=studyCards.filter((_,i)=>true).length; // all counted
+  const isReview=studySessionType==='review';
+  const hasPrev=studyIndex>0;
   app.innerHTML=`
-  <div id="view-learn" class="view active">
-    <div class="summary-card card">
-      <div style="font-size:64px;margin-bottom:8px">🎉</div>
+  <div id="view-learn" class="view active study-layout">
+    <div class="summary-card card" style="margin:auto;width:100%;max-width:480px">
+      <div style="font-size:14px;color:var(--success);font-weight:600;margin-bottom:4px">🎉 本轮完成</div>
       <div class="big-num good">${studyCards.length}</div>
-      <div style="font-size:16px;color:var(--text2);margin-bottom:16px">本轮完成！继续加油</div>
-      <button class="btn btn-primary" onclick="startReview()">🔄 继续复习</button>
-      <button class="btn btn-surface" style="margin-top:8px" onclick="showView('dashboard');renderDashboard();">📊 返回仪表盘</button>
+      <div style="font-size:15px;color:var(--text2);margin:8px 0 22px">张卡片已${isReview?'复习':'学习'} · 继续加油！</div>
+      <button class="btn btn-primary" onclick="${isReview?'startReview()':'startNewLearning()'}">${isReview?'继续复习':'继续学习'}</button>
+      <div style="display:flex;gap:10px;margin-top:10px">
+        ${hasPrev?`<button class="btn btn-surface" onclick="prevCard()">‹ 返回上一张</button>`:''}
+        <button class="btn btn-surface" onclick="showView('dashboard');renderDashboard();">返回仪表盘</button>
+      </div>
     </div>
   </div>`;
 }
@@ -969,19 +1309,18 @@ function renderStudySummary(){
 async function renderBrowse(filter='全部'){
   browseFilter=filter;
   const drugs=await dbGetAll('drugs');
-  const progress=await dbGetAll('progress');
-  const progMap={};
-  progress.forEach(p=>progMap[p.drugId]=p);
 
   const active=drugs.filter(d=>d.active!==false);
-  const filtered=filter==='全部'?active:active.filter(d=>d.cat===filter);
+  const favCount=active.filter(d=>d.favorite).length;
+  const filtered=filter==='全部'?active:(filter==='收藏'?active.filter(d=>d.favorite):active.filter(d=>d.cat===filter));
 
   let html=`
   <div id="view-browse" class="view active">
-    <div style="font-size:18px;font-weight:800;margin-bottom:12px">🔍 快速浏览</div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:12px">快速浏览</div>
     <input class="search-input" placeholder="搜索药名..." oninput="filterBrowse(this.value)" id="browseSearch">
     <div class="filter-scroll">
       <button class="filter-chip${filter==='全部'?' active':''}" onclick="renderBrowse('全部')">全部 (${active.length})</button>
+      <button class="filter-chip${filter==='收藏'?' active':''}" onclick="renderBrowse('收藏')">⭐ 收藏 (${favCount})</button>
       ${ALL_CATEGORIES.map(c=>`
         <button class="filter-chip${filter===c?' active':''}" onclick="renderBrowse('${c}')">${c}</button>
       `).join('')}
@@ -990,18 +1329,11 @@ async function renderBrowse(filter='全部'){
   `;
 
   filtered.forEach(d=>{
-    const p=progMap[d.id];
-    let stars='';
-    if(p){
-      if(p.stage>=LEARNING_STEPS.length) stars='⭐⭐⭐';
-      else if(p.stage>=5) stars='⭐⭐';
-      else if(p.totalReviews>0) stars='⭐';
-    }
     html+=`
     <div class="browse-cell" onclick="previewCard(${d.id})">
+      ${d.favorite?'<span style="position:absolute;top:4px;right:6px;color:var(--star);font-size:12px;z-index:2">★</span>':''}
       <img src="${getDrugImage(d)}" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22><rect fill=%22%23f1f5f9%22 width=%22100%22 height=%22100%22/><text x=%2250%22 y=%2255%22 text-anchor=%22middle%22 fill=%22%2394a3b8%22 font=%2212px sans-serif%22>无图片</text></svg>'">
       <div class="name">${d.name}</div>
-      <div class="stars">${stars||'·'}</div>
     </div>`;
   });
 
@@ -1033,7 +1365,9 @@ async function previewCard(id){
       <div style="font-size:28px;font-weight:700;margin-bottom:4px">${drug.name}</div>
       <div style="font-size:14px;color:var(--text2);margin-bottom:4px">📂 ${drug.cat}</div>
       <div style="font-size:14px;color:${statusColor};margin-bottom:12px">${status}</div>
-      ${progress?`<div style="font-size:12px;color:var(--text2);margin-bottom:12px">下次复习: ${new Date(progress.nextReview).toLocaleDateString('zh-CN')} · 间隔${progress.interval>=1440?Math.round(progress.interval/1440)+'天':Math.round(progress.interval/60)+'小时'}</div>`:''}
+      ${progress?`<div style="font-size:12px;color:var(--text2);margin-bottom:12px">下次复习: ${new Date(progress.nextReview).toLocaleDateString('zh-CN')} · 间隔 ${progress.interval||1} 天</div>`:''}
+      ${getNote(drug)?`<div style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6">${getNote(drug)}</div>`:''}
+      <button class="btn btn-surface btn-sm fav-btn-modal${drug.favorite?' on':''}" style="margin-bottom:8px" onclick="toggleFavorite(${drug.id},this,true)">${drug.favorite?'★ 已收藏':'☆ 收藏'}</button>
       <button class="btn btn-surface btn-sm" onclick="document.querySelector('.modal-overlay').remove()">关闭</button>
     </div>
   </div>`;
@@ -1052,24 +1386,24 @@ async function renderSettings(){
 
   app.innerHTML=`
   <div id="view-settings" class="view active">
-    <div style="font-size:18px;font-weight:800;margin-bottom:16px">⚙️ 设置</div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:16px">设置</div>
 
     <div class="card">
       <div class="card-header"><span class="dot"></span>学习设置</div>
       <div class="setting-item">
         <span class="label">每日新卡片数</span>
         <div class="stepper">
-          <button onclick="changeSetting('dailyNewCards',-5)">−</button>
+          <button onclick="changeSetting('dailyNewCards',-1)">−</button>
           <span class="val" id="dailyNewVal">${dailyNew?.value||'10'}</span>
-          <button onclick="changeSetting('dailyNewCards',5)">+</button>
+          <button onclick="changeSetting('dailyNewCards',1)">+</button>
         </div>
       </div>
       <div class="setting-item">
         <span class="label">每日复习上限</span>
         <div class="stepper">
-          <button onclick="changeSetting('dailyReviewLimit',-10)">−</button>
+          <button onclick="changeSetting('dailyReviewLimit',-1)">−</button>
           <span class="val" id="dailyReviewVal">${dailyReview?.value||'50'}</span>
-          <button onclick="changeSetting('dailyReviewLimit',10)">+</button>
+          <button onclick="changeSetting('dailyReviewLimit',1)">+</button>
         </div>
       </div>
     </div>
@@ -1104,7 +1438,8 @@ async function renderSettings(){
 
 async function changeSetting(key,delta){
   const s=await dbGet('settings',key);
-  const newVal=Math.max(1,parseInt(s?.value||'10')+delta);
+  const cap=key==='dailyNewCards'?100:500;
+  const newVal=Math.min(cap,Math.max(1,parseInt(s?.value||'10')+delta));
   await dbPut('settings',{key,value:String(newVal)});
   const el=document.getElementById(key==='dailyNewCards'?'dailyNewVal':'dailyReviewVal');
   if(el) el.textContent=newVal;
@@ -1220,8 +1555,8 @@ async function editDrug(id){
       <input id="editNewCat" placeholder="输入新分类名称" style="display:none;margin-top:4px">
       <label>更换图片 ${hasCustom}</label>
       <input type="file" id="editImage" accept="image/*" onchange="previewUpload(this,'editPreview')" style="margin-bottom:8px">
-      <label>备注</label>
-      <textarea id="editNotes" rows="2">${drug.notes||''}</textarea>
+      <label>药理作用 / 笔记（一句话，翻卡时显示）</label>
+      <textarea id="editNotes" rows="2" placeholder="如：β受体阻断剂，降压、抗心绞痛">${getNote(drug)}</textarea>
       <div class="btn-row" style="margin-top:12px">
         <button class="btn btn-primary" onclick="saveDrug(${id})">保存</button>
         <button class="btn btn-surface" onclick="document.querySelector('.modal-overlay').remove()">取消</button>
@@ -1250,7 +1585,7 @@ async function saveDrug(id){
     if(!ALL_CATEGORIES.includes(cat)) ALL_CATEGORIES.push(cat);
   }
   drug.cat=cat;
-  drug.notes=document.getElementById('editNotes').value;
+  drug.note=document.getElementById('editNotes').value.trim();
   drug.updatedAt=Date.now();
   // Handle image upload
   const fileInput=document.getElementById('editImage');
@@ -1266,6 +1601,27 @@ async function saveDrug(id){
 function getDrugImage(drug){
   if(drug.customImage) return drug.customImage;
   return drug.id+'.png';
+}
+
+// 药理作用/笔记：优先自定义note → 旧notes字段 → 内置NOTE_MAP
+function getNote(drug){
+  if(!drug) return '';
+  const n=drug.note||drug.notes||NOTE_MAP[drug.id]||'';
+  return n;
+}
+
+// 收藏/取消收藏
+async function toggleFavorite(id,btn,labelMode){
+  const drug=await dbGet('drugs',id);
+  if(!drug) return;
+  drug.favorite=!drug.favorite;
+  await dbPut('drugs',drug);
+  if(btn){
+    const on=drug.favorite;
+    btn.classList.toggle('on',on);
+    btn.innerHTML=labelMode?(on?'★ 已收藏':'☆ 收藏'):(on?'★':'☆');
+  }
+  return drug.favorite;
 }
 
 function previewUpload(input,previewId){
@@ -1393,15 +1749,16 @@ async function updateDueBadge(){
 }
 init();
 
-// Keyboard shortcuts for quality rating
+// Keyboard shortcuts: ←→ 切换, 空格/回车 翻卡, 翻卡后 ←→/A/D 评分
 document.addEventListener('keydown',e=>{
-  if(currentView==='learn'&&studyRevealed){
+  if(currentView!=='learn') return;
+  if(studyRevealed){
     if(e.key==='ArrowLeft'||e.key==='a'){rateQuality(false);}
-    if(e.key==='ArrowRight'||e.key==='d'){rateQuality(true);}
-  }
-  if(e.key===' '&&currentView==='learn'&&!studyRevealed){
-    e.preventDefault();
-    revealAnswer();
+    else if(e.key==='ArrowRight'||e.key==='d'){rateQuality(true);}
+  }else{
+    if(e.key==='ArrowLeft'){prevCard();}
+    else if(e.key==='ArrowRight'){nextCard();}
+    else if(e.key===' '||e.key==='Enter'){e.preventDefault();revealAnswer();}
   }
 });
 
