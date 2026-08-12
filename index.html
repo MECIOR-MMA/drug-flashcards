@@ -548,7 +548,7 @@ const DRUG_DATA = [
 
 let ALL_CATEGORIES = [...new Set(DRUG_DATA.map(d=>d.cat))].sort();
 
-// 药理作用/笔记（一句话），可在"编辑药品"中自定义覆盖
+// 注释（一句话），可在"编辑药品"中自定义覆盖
 const NOTE_MAP={
   1:'苯二氮䓬类镇静催眠药，增强GABA能神经传递，抗焦虑、镇静催眠、抗惊厥',
   2:'巴比妥类镇静催眠药，增强GABA-A受体作用，镇静催眠、抗癫痫',
@@ -1516,8 +1516,8 @@ async function renderDrugEditor(search=''){
       <button class="btn btn-sm btn-surface" onclick="renderSettings()">← 返回</button>
       <div style="font-size:16px;font-weight:700">📋 药品列表</div>
     </div>
-    <input class="search-input" placeholder="搜索药品..." value="${search}" oninput="renderDrugEditor(this.value)">
-    <div style="font-size:13px;color:var(--text2);margin-bottom:8px">共 ${filtered.length} 种药品</div>
+    <input class="search-input" placeholder="搜索药品..." value="${search}" oninput="filterDrugRows(this.value)">
+    <div id="drugRowCount" style="font-size:13px;color:var(--text2);margin-bottom:8px">共 ${filtered.length} 种药品</div>
   `;
 
   filtered.forEach(d=>{
@@ -1535,6 +1535,22 @@ async function renderDrugEditor(search=''){
 
   html+=`</div>`;
   app.innerHTML=html;
+}
+
+// 药品列表搜索：就地过滤已渲染的行，避免每次输入都重渲染导致失焦/跳动（也兼容中文输入法）
+function filterDrugRows(q){
+  q=q.trim();
+  const rows=document.querySelectorAll('.drug-row');
+  let visible=0;
+  rows.forEach(row=>{
+    const name=row.querySelector('.info .name').textContent;
+    const cat=row.querySelector('.info .cat').textContent;
+    const match=!q||name.includes(q)||cat.includes(q);
+    row.style.display=match?'':'none';
+    if(match) visible++;
+  });
+  const count=document.getElementById('drugRowCount');
+  if(count) count.textContent=`共 ${visible} 种药品`;
 }
 
 async function editDrug(id){
@@ -1555,8 +1571,8 @@ async function editDrug(id){
       <input id="editNewCat" placeholder="输入新分类名称" style="display:none;margin-top:4px">
       <label>更换图片 ${hasCustom}</label>
       <input type="file" id="editImage" accept="image/*" onchange="previewUpload(this,'editPreview')" style="margin-bottom:8px">
-      <label>药理作用 / 笔记（一句话，翻卡时显示）</label>
-      <textarea id="editNotes" rows="2" placeholder="如：β受体阻断剂，降压、抗心绞痛">${getNote(drug)}</textarea>
+      <label>注释</label>
+      <textarea id="editNotes" rows="2" placeholder="输入注释（翻卡时显示）">${getNote(drug)}</textarea>
       <div class="btn-row" style="margin-top:12px">
         <button class="btn btn-primary" onclick="saveDrug(${id})">保存</button>
         <button class="btn btn-surface" onclick="document.querySelector('.modal-overlay').remove()">取消</button>
@@ -1603,7 +1619,7 @@ function getDrugImage(drug){
   return drug.id+'.png';
 }
 
-// 药理作用/笔记：优先自定义note → 旧notes字段 → 内置NOTE_MAP
+// 注释：优先自定义note → 旧notes字段 → 内置NOTE_MAP
 function getNote(drug){
   if(!drug) return '';
   const n=drug.note||drug.notes||NOTE_MAP[drug.id]||'';
