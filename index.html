@@ -1553,6 +1553,19 @@ function filterDrugRows(q){
   if(count) count.textContent=`共 ${visible} 种药品`;
 }
 
+async function deleteDrug(id){
+  const drug=await dbGet('drugs',id);
+  if(!drug) return;
+  if(!confirm(`确定要删除「${drug.name}」吗？此操作不可撤销。`)) return;
+  await dbDelete('drugs',id);
+  // 同时清理该药品的学习进度，避免残留孤立数据
+  const tx=db.transaction('progress','readwrite');
+  tx.objectStore('progress').delete(id);
+  await new Promise(r=>{tx.oncomplete=r;});
+  toast('🗑 已删除');
+  renderDrugEditor();
+}
+
 async function editDrug(id){
   const drug=await dbGet('drugs',id);
   if(!drug) return;
