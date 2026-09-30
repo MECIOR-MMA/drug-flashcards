@@ -834,11 +834,6 @@ let wakeLock=null;     // 当前持有的 WakeLockSentinel
 let wantAwake=false;   // 期望状态：是否停在背诵页
 let wakeWarned=false;  // 不支持时只提示一次
 
-function updateWakeBadge(){
-  const el=document.getElementById('wakeBadge');
-  if(el) el.style.display=wakeLock?'':'none';
-}
-
 async function acquireWakeLock(){
   if(!wantAwake) return;
   if(wakeLock&&!wakeLock.released) return; // 已持有且未失效，不用重复申请
@@ -846,7 +841,7 @@ async function acquireWakeLock(){
   if(document.visibilityState!=='visible') return;
   try{
     wakeLock=await navigator.wakeLock.request('screen');
-    wakeLock.addEventListener('release',()=>{wakeLock=null;updateWakeBadge();});
+    wakeLock.addEventListener('release',()=>{wakeLock=null;});
   }catch(err){
     wakeLock=null; // 低电量模式/省电模式等场景系统会拒绝
     if(!wakeWarned){
@@ -854,12 +849,10 @@ async function acquireWakeLock(){
       toast('⚠️ 屏幕常亮失败，请关闭「低电量模式」，或在系统设置里关掉「自动锁定」');
     }
   }
-  updateWakeBadge();
 }
 
 function releaseWakeLock(){
   if(wakeLock){try{wakeLock.release();}catch(e){}wakeLock=null;}
-  updateWakeBadge();
 }
 
 function setScreenAwake(on){
@@ -1266,9 +1259,8 @@ function renderStudyCard(){
       <button class="btn btn-forget btn-rate" id="btnForget" onclick="rateQuality(false)" disabled>忘记了</button>
       <button class="btn btn-remember btn-rate" id="btnRemember" onclick="rateQuality(true)" disabled>记住了</button>
     </div>
-    <div class="study-hint">"忘记了 / 记住了"即翻到下一张 · "上一张"可返回重新选择<span id="wakeBadge" style="display:none"> · ☀️ 屏幕常亮</span></div>
+    <div class="study-hint">"忘记了 / 记住了"即翻到下一张 · "上一张"可返回重新选择</div>
   </div>`;
-  updateWakeBadge();
 }
 
 // 上一张 / 下一张：在本次会话内切换，不改变评分进度
